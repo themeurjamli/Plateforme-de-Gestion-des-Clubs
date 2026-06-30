@@ -8,14 +8,13 @@ import {
   PollVote,
 } from '../types/index';
 
-// ─── UTILISATEURS ────────────────────────────────────────────
-// 4 emails = 4 rôles différents pour tester
+
 
 export const mockUsers: User[] = [
   {
     id: 'u0',
-    firstName: 'Super',
-    lastName: 'Admin',
+    firstName: 'Admin',
+    lastName: '1',
     email: 'admin@test.com',
     role: 'admin',
     status: 'active',
@@ -70,8 +69,7 @@ export const mockUsers: User[] = [
   },
 ];
 
-// ─── CLUBS ───────────────────────────────────────────────────
-// 3 actifs, 2 en attente de validation par l'admin
+
 
 export const mockClubs: Club[] = [
   {
@@ -136,8 +134,6 @@ export const mockClubs: Club[] = [
   },
 ];
 
-// ─── ADHÉSIONS ───────────────────────────────────────────────
-// Qui appartient à quel club, avec quel statut
 
 export const mockMemberships: Membership[] = [
   { id: 'm1', userId: 'u1', clubId: 'c1', status: 'member',  joinedAt: '2025-01-15' },
@@ -148,7 +144,7 @@ export const mockMemberships: Membership[] = [
   { id: 'm6', userId: 'u4', clubId: 'c1', status: 'pending', joinedAt: '2025-06-12' },
 ];
 
-// ─── ÉVÉNEMENTS ──────────────────────────────────────────────
+
 
 export const mockEvents: Event[] = [
   {
@@ -214,7 +210,6 @@ export const mockRegistrations: EventRegistration[] = [
   { id: 'r3', eventId: 'e3', userId: 'u3', registeredAt: '2025-06-09' },
 ];
 
-// ─── SONDAGES ────────────────────────────────────────────────
 
 export const mockPolls: Poll[] = [
   {

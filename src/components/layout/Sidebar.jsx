@@ -18,6 +18,7 @@ const adminItems = [
   { path: '/admin/clubs',        icon: '🏛',  label: 'Clubs'         },
   { path: '/admin/utilisateurs', icon: '👥', label: 'Utilisateurs'  },
   { path: '/admin/evenements',   icon: '📅', label: 'Événements'    },
+  { path: '/admin/statistiques', icon: '📈', label: 'Statistiques'  },
 ];
 
 export default function Sidebar() {

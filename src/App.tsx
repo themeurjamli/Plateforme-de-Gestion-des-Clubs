@@ -8,17 +8,19 @@ import RegisterPage from './pages/Register';
 import Home         from './pages/Home';
 import Clubs        from './pages/Clubs';
 import ClubDetail   from './pages/ClubDetail';
-// import Profile      from './pages/Profile';
-// import MyClubs      from './pages/MyClubs';
+import Profile      from './pages/Profile';
+import MyClubs      from './pages/Myclubs';
 import DashboardHome from './pages/Dashboard/DashboardHome';
 import MembersPage   from './pages/Dashboard/Members';
 import EventsPage       from './pages/Dashboard/Events';
-// import Polls        from './pages/Dashboard/Polls';
-// import Gallery      from './pages/Dashboard/Gallery';
-// import ClubSettings from './pages/Dashboard/ClubSettings';
-// import AdminHome    from './pages/Admin/AdminHome';
-// import AdminClubs   from './pages/Admin/AdminClubs';
-// import AdminUsers   from './pages/Admin/AdminUsers';
+import PollsPage      from './pages/Dashboard/Polls';
+import GalleryPage     from './pages/Dashboard/Gallery';
+import ClubSettings from './pages/Dashboard/Clubsettings';
+import AdminHome    from './pages/Admin/Adminhome';
+import AdminPage from './pages/Admin/Adminclubs';
+import AdminUsers   from './pages/Admin/Adminusers';
+import AdminEvents  from './pages/Admin/Adminevents';
+import AdminStats   from './pages/Admin/Adminstats';
 
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -50,38 +52,41 @@ function AppRoutes() {
       {<Route path="/"          element={<Home />} /> }
       <Route path="/clubs"     element={<Clubs />} /> 
       <Route path="/clubs/:id" element={<ClubDetail />} /> 
-      {/* ── Pages à débloquer phase par phase ─ */}
-      {/* ── Membre connecté ─────────────────── */}
-      {/* <Route path="/profile"  element={<PrivateRoute><Profile /></PrivateRoute>} /> */}
-      {/* <Route path="/mes-clubs" element={<PrivateRoute><MyClubs /></PrivateRoute>} /> */}
-
-
+      <Route path="/profile"  element={<PrivateRoute><Profile /></PrivateRoute>} /> 
+      <Route path="/mes-clubs" element={<PrivateRoute><MyClubs /></PrivateRoute>} /> 
       <Route path="/dashboard"           element={<PrivateRoute><DashboardHome /></PrivateRoute>} />
       <Route path="/dashboard/membres"   element={<PrivateRoute><MembersPage /></PrivateRoute>} />
       <Route path="/dashboard/evenements" element={<PrivateRoute><EventsPage /></PrivateRoute>} />
-      {/* ── Dashboard président ─────────────── */}
-       {/*<Route path="/dashboard" element={
+      <Route path="/dashboard/sondages"   element={<PrivateRoute><PollsPage /></PrivateRoute>} />
+      <Route path="/dashboard/galerie"    element={<PrivateRoute><GalleryPage /></PrivateRoute>} />
+      <Route path="/dashboard/settings"   element={<PrivateRoute><ClubSettings /></PrivateRoute>} />
+      <Route path="/admin" element={<PrivateRoute><AdminHome /></PrivateRoute>} />
+      <Route path="/admin/clubs" element={<PrivateRoute><AdminPage /></PrivateRoute>} />
+      <Route path="/admin/utilisateurs" element={<PrivateRoute><AdminUsers /></PrivateRoute>} />
+      <Route path="/admin/evenements"   element={<PrivateRoute><AdminEvents /></PrivateRoute>} />
+      <Route path="/admin/statistiques" element={<PrivateRoute><AdminStats /></PrivateRoute>} />
+      
+      
+      <Route path="/dashboard" element={
           <RoleRoute roles={['president']}>
             <DashboardHome />
           </RoleRoute>
         }
-      /> */}
+      /> 
 
-      {/* ── Super Admin ─────────────────────── */}
-      {/* <Route path="/admin" element={
+      
+       <Route path="/admin" element={
           <RoleRoute roles={['admin']}>
             <AdminHome />
           </RoleRoute>
         }
-      /> */}
+      /> 
 
-      {/* ── Fallback ────────────────────────── */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
 
-// ─── APP ─────────────────────────────────────────────────────
 
 export default function App() {
   return (

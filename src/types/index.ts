@@ -29,7 +29,7 @@ export type ClubCategory =
   | 'Art'
   | 'Autre';
 
-export type ClubStatus = 'pending' | 'active' | 'inactive';
+export type ClubStatus = 'pending' | 'active' | 'inactive' | 'rejected';
 
 export interface Club {
   id: string;
