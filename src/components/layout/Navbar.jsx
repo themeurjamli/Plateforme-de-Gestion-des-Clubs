@@ -39,6 +39,10 @@ export default function Navbar() {
             </Link>
           )}
 
+          <Link to="/classement" className="navbar-link">
+             Classement
+          </Link>
+
           {user?.role === 'president' && (
             <Link to="/dashboard" className="navbar-link">
               Dashboard

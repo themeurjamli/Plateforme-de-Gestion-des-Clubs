@@ -6,6 +6,7 @@ import {
   EventRegistration,
   Poll,
   PollVote,
+  EventRating,
 } from '../types/index';
 
 
@@ -114,10 +115,10 @@ export const mockClubs: Club[] = [
     description:
       "Lectures, discussions et ateliers d'écriture créative. Chaque mois un nouveau livre.",
     category: 'Culture',
-    status: 'pending',
+    status: 'active',
     presidentId: 'u4',
-    membersCount: 0,
-    eventsCount: 0,
+    membersCount: 12,
+    eventsCount: 2,
     createdAt: '2025-06-10',
   },
   {
@@ -142,6 +143,7 @@ export const mockMemberships: Membership[] = [
   { id: 'm4', userId: 'u2', clubId: 'c2', status: 'pending', joinedAt: '2025-06-01' },
   { id: 'm5', userId: 'u3', clubId: 'c3', status: 'member',  joinedAt: '2025-03-01' },
   { id: 'm6', userId: 'u4', clubId: 'c1', status: 'pending', joinedAt: '2025-06-12' },
+  { id: 'm7', userId: 'u4', clubId: 'c4', status: 'member',  joinedAt: '2025-06-15' },
 ];
 
 
@@ -202,6 +204,19 @@ export const mockEvents: Event[] = [
     status: 'past',
     createdAt: '2025-05-01',
   },
+  {
+  id: 'e5',
+  clubId: 'c3',
+  title: 'Tournoi mensuel',
+  description: 'Tournoi interne entre les membres.',
+  location: 'Terrain de sport',
+  date: '2026-04-12',  
+  time: '10:00',
+  registeredCount: 18,
+  visibility: 'public',
+  status: 'past',
+  createdAt: '2026-04-01',
+},
 ];
 
 export const mockRegistrations: EventRegistration[] = [
@@ -244,4 +259,9 @@ export const mockPolls: Poll[] = [
 export const mockVotes: PollVote[] = [
   { id: 'v1', pollId: 'p1', userId: 'u2', optionId: 'o1', votedAt: '2025-06-11' },
   { id: 'v2', pollId: 'p2', userId: 'u2', optionId: 'o4', votedAt: '2025-05-21' },
+];
+
+export const mockRatings: EventRating[] = [
+  { id: 'rt1', eventId: 'e4', userId: 'u2', rating: 4, comment: 'Super match, bonne ambiance !', createdAt: '2026-05-11' },
+  { id: 'rt2', eventId: 'e4', userId: 'u3', rating: 5, comment: 'Excellente organisation.', createdAt: '2026-05-11' },
 ];

@@ -3,14 +3,20 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Button from '../components/ui/Button';
 import { CategoryBadge, ClubStatusBadge } from '../components/ui/Badge';
+import { LevelProgress } from '../components/ui/LevelBadge';
+import StarRating from '../components/ui/StarRating';
+import { calculateClubScore } from '../utils/scoring';
+import { calculateEventStreak, getStreakLabel } from '../utils/streak';
 import {
   mockClubs,
   mockUsers,
   mockEvents,
   mockMemberships,
   mockPolls,
+  mockRatings,
 } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
+import { EventRating } from '../types/index';
 import './ClubDetail.css';
 
 type Tab = 'evenements' | 'membres' | 'sondages' | 'galerie';
@@ -22,7 +28,8 @@ export default function ClubDetailPage() {
 
   const [activeTab, setActiveTab] = useState<Tab>('evenements');
 
-  // Trouver le club
+  const [ratings, setRatings] = useState<EventRating[]>([...mockRatings]);
+
   const club = mockClubs.find((c) => c.id === id);
 
   if (!club) {
@@ -37,23 +44,35 @@ export default function ClubDetailPage() {
     );
   }
 
-  // Données liées au club
-  const president   = mockUsers.find((u) => u.id === club.presidentId);
-  const events      = mockEvents.filter((e) => e.clubId === club.id);
-  const members     = mockMemberships.filter((m) => m.clubId === club.id && m.status === 'member');
-  const polls       = mockPolls.filter((p) => p.clubId === club.id);
+  const president  = mockUsers.find((u) => u.id === club.presidentId);
+  const events     = mockEvents.filter((e) => e.clubId === club.id);
+  const members    = mockMemberships.filter((m) => m.clubId === club.id && m.status === 'member');
+  const polls      = mockPolls.filter((p) => p.clubId === club.id);
 
-  // Statut d'adhésion de l'utilisateur connecté
   const myMembership = user
     ? mockMemberships.find((m) => m.userId === user.id && m.clubId === club.id)
     : null;
 
+  const score       = calculateClubScore(club, events, mockPolls, mockMemberships);
+  const streak      = calculateEventStreak(events);
+  const streakLabel = getStreakLabel(streak);
+
   const handleJoin = () => {
-    if (!user) {
-      navigate('/register');
-      return;
-    }
-    alert('Demande d\'adhésion envoyée ! (simulation)');
+    if (!user) { navigate('/register'); return; }
+    alert("Demande d'adhésion envoyée ! (simulation)");
+  };
+
+  const handleRate = (eventId: string, rating: number, comment: string) => {
+    if (!user) return;
+    const newRating: EventRating = {
+      id: `rt-${Date.now()}`,
+      eventId,
+      userId: user.id,
+      rating,
+      comment: comment || undefined,
+      createdAt: new Date().toISOString().slice(0, 10),
+    };
+    setRatings((prev) => [...prev, newRating]);
   };
 
   const tabs: { key: Tab; label: string }[] = [
@@ -69,14 +88,12 @@ export default function ClubDetailPage() {
 
       <div className="detail-container">
 
-        {/* ── FIL D'ARIANE ─────────────────────────────── */}
         <div className="detail-breadcrumb">
           <Link to="/clubs">Clubs</Link>
           <span>›</span>
           <span>{club.name}</span>
         </div>
 
-        {/* ── EN-TÊTE DU CLUB ───────────────────────────── */}
         <div className="detail-header card">
           <div className="detail-header-left">
             <div className="detail-logo">{club.name[0]}</div>
@@ -91,12 +108,13 @@ export default function ClubDetailPage() {
                 <span>👥 {club.membersCount} membres</span>
                 <span>📅 {club.eventsCount} événements</span>
                 <span>📆 Créé le {club.createdAt}</span>
-                {president && <span>👤 Président : {president.firstName} {president.lastName}</span>}
+                {president && (
+                  <span>👤 Président : {president.firstName} {president.lastName}</span>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Bouton d'action selon le statut */}
           <div className="detail-action">
             {!myMembership && club.status === 'active' && (
               <Button variant="primary" size="lg" onClick={handleJoin}>
@@ -104,16 +122,27 @@ export default function ClubDetailPage() {
               </Button>
             )}
             {myMembership?.status === 'pending' && (
-              <Button variant="secondary" disabled>
-                ⏳ Demande en attente
-              </Button>
+              <Button variant="secondary" disabled>⏳ Demande en attente</Button>
             )}
             {myMembership?.status === 'member' && (
-              <Button variant="success" disabled>
-                ✓ Vous êtes membre
-              </Button>
+              <Button variant="success" disabled>✓ Vous êtes membre</Button>
             )}
           </div>
+        </div>
+
+
+        <div className="card detail-level-card">
+          <div className="detail-level-header">
+            <span className="detail-level-title">Niveau du club</span>
+            {streak >= 2 && (
+              <span className="detail-streak">{streakLabel}</span>
+            )}
+          </div>
+          <LevelProgress
+            levelInfo={score.levelInfo}
+            points={score.totalPoints}
+            progressPct={score.progressPct}
+          />
         </div>
 
         {/* ── ONGLETS ───────────────────────────────────── */}
@@ -139,46 +168,79 @@ export default function ClubDetailPage() {
                 <EmptyState text="Aucun événement pour ce club." />
               ) : (
                 <div className="events-list">
-                  {events.map((event) => (
-                    <div key={event.id} className="event-card card">
-                      <div className="event-date-box">
-                        <span className="event-day">
-                          {new Date(event.date).getDate()}
-                        </span>
-                        <span className="event-month">
-                          {new Date(event.date).toLocaleString('fr-FR', { month: 'short' })}
-                        </span>
-                      </div>
-                      <div className="event-body">
-                        <div className="event-top">
-                          <h3 className="event-title">{event.title}</h3>
-                          <span className={`event-status-tag event-${event.status}`}>
-                            {event.status === 'upcoming' ? 'À venir' : event.status === 'past' ? 'Passé' : 'Annulé'}
+                  {events.map((event) => {
+                    const eventRatings = ratings.filter((r) => r.eventId === event.id);
+                    const isPast = event.status === 'past';
+                    const isMember = myMembership?.status === 'member';
+
+                    return (
+                      <div key={event.id} className="event-card card">
+                        <div className="event-date-box">
+                          <span className="event-day">
+                            {new Date(event.date).getDate()}
+                          </span>
+                          <span className="event-month">
+                            {new Date(event.date).toLocaleString('fr-FR', { month: 'short' })}
                           </span>
                         </div>
-                        <p className="event-desc">{event.description}</p>
-                        <div className="event-meta">
-                          <span>📍 {event.location}</span>
-                          <span>🕐 {event.time}</span>
-                          <span>
-                            👥 {event.registeredCount}
-                            {event.maxCapacity ? ` / ${event.maxCapacity}` : ''} inscrits
-                          </span>
+                        <div className="event-body">
+                          <div className="event-top">
+                            <h3 className="event-title">{event.title}</h3>
+                            <span className={`event-status-tag event-${event.status}`}>
+                              {event.status === 'upcoming'
+                                ? 'À venir'
+                                : event.status === 'past'
+                                ? 'Passé'
+                                : 'Annulé'}
+                            </span>
+                          </div>
+                          <p className="event-desc">{event.description}</p>
+                          <div className="event-meta">
+                            <span>📍 {event.location}</span>
+                            <span>🕐 {event.time}</span>
+                            <span>
+                              👥 {event.registeredCount}
+                              {event.maxCapacity ? ` / ${event.maxCapacity}` : ''} inscrits
+                            </span>
+                          </div>
+
+                          {/* ── Notation — événements passés, membres uniquement ── */}
+                          {isPast && isMember && user && (
+                            <StarRating
+                              eventId={event.id}
+                              existingRatings={eventRatings}
+                              userId={user.id}
+                              onRate={handleRate}
+                            />
+                          )}
+
+                          {/* Moyenne visible par tous si des avis existent */}
+                          {isPast && !isMember && eventRatings.length > 0 && (
+                            <div className="event-avg-rating">
+                              ⭐{' '}
+                              {(
+                                eventRatings.reduce((s, r) => s + r.rating, 0) /
+                                eventRatings.length
+                              ).toFixed(1)}
+                              /5 · {eventRatings.length} avis
+                            </div>
+                          )}
                         </div>
+
+                        {event.status === 'upcoming' && isMember && (
+                          <div className="event-action">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => alert(`Inscrit à "${event.title}" ! (simulation)`)}
+                            >
+                              S'inscrire
+                            </Button>
+                          </div>
+                        )}
                       </div>
-                      {event.status === 'upcoming' && myMembership?.status === 'member' && (
-                        <div className="event-action">
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => alert(`Inscrit à "${event.title}" ! (simulation)`)}
-                          >
-                            S'inscrire
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -270,8 +332,6 @@ export default function ClubDetailPage() {
     </div>
   );
 }
-
-// ─── COMPOSANT VIDE ──────────────────────────────────────────
 
 function EmptyState({ text }: { text: string }) {
   return (

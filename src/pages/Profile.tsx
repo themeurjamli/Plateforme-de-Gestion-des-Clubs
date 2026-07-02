@@ -4,7 +4,10 @@ import Navbar from '../components/layout/Navbar';
 import Button from '../components/ui/Button';
 import Input, { Textarea } from '../components/ui/Input';
 import { UserRoleBadge } from '../components/ui/Badge';
+import MemberBadges from '../components/ui/MemberBadges';
 import { useAuth } from '../context/AuthContext';
+import { getMemberBadges } from '../utils/memberBadges';
+import { mockMemberships, mockRegistrations, mockVotes } from '../data/mockData';
 import './Profile.css';
 
 const ALL_INTERESTS = [
@@ -29,6 +32,8 @@ export default function ProfilePage() {
   const [errors,       setErrors]       = useState<Record<string, string>>({});
 
   if (!user) return null;
+
+  const badges = getMemberBadges(user, mockMemberships, mockRegistrations, mockVotes);
 
   // ── Toggle intérêt
   const toggleInterest = (interest: string) => {
@@ -116,6 +121,10 @@ export default function ProfilePage() {
               <p className="interests-hint">
                 Clique pour ajouter ou retirer un intérêt
               </p>
+            </div>
+
+            <div className="card" style={{ padding: "18px" }}>
+              <MemberBadges badges={badges} />
             </div>
 
             <button className="profile-logout-btn" onClick={handleLogout}>

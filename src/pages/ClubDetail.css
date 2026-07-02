@@ -318,6 +318,36 @@
 }
 
 .empty-icon { font-size: 36px; display: block; margin-bottom: 12px; }
+.detail-level-card {
+  margin-top: 16px;
+  padding: 16px 20px;
+}
+
+.detail-level-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.detail-level-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.detail-streak {
+  font-size: 12px;
+  color: var(--warning);
+  font-weight: 500;
+}
+
+.event-avg-rating {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--warning);
+  font-weight: 500;
+}
 
 
 @media (max-width: 640px) {

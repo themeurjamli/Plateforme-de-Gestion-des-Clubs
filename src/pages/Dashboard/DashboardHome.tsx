@@ -4,7 +4,12 @@ import Sidebar from '../../components/layout/Sidebar';
 import PageHeader from '../../components/ui/Pageheader';
 import StatCard from '../../components/ui/Statcard';
 import Button from '../../components/ui/Button';
+import ChallengesPanel from '../../components/ui/ChallengesPanel';
+import { LevelProgress } from '../../components/ui/LevelBadge';
 import { useAuth } from '../../context/AuthContext';
+import { calculateClubScore } from '../../utils/scoring';
+import { calculateEventStreak, getStreakLabel } from '../../utils/streak';
+import { getClubChallenges } from '../../utils/challenges';
 import {
   mockClubs,
   mockMemberships,
@@ -16,7 +21,6 @@ import './Dashboard.css';
 export default function DashboardHome() {
   const { user } = useAuth();
 
-  
   const club = mockClubs.find((c) => c.presidentId === user?.id);
 
   if (!club) {
@@ -39,6 +43,12 @@ export default function DashboardHome() {
   const polls       = mockPolls.filter((p) => p.clubId === club.id);
   const activePolls = polls.filter((p) => p.status === 'active');
 
+  // ── Niveau 2 : score, streak, défis ─────────────────────
+  const score      = calculateClubScore(club, events, polls, mockMemberships);
+  const streak     = calculateEventStreak(events);
+  const streakLabel = getStreakLabel(streak);
+  const challenges = getClubChallenges(club, events, mockMemberships, polls);
+
   return (
     <div className="dashboard-layout">
       <Sidebar />
@@ -51,10 +61,10 @@ export default function DashboardHome() {
         />
 
         <div className="dash-stats-grid">
-          <StatCard label="Membres"       value={members.length}     icon="👥" color="blue"    />
-          <StatCard label="En attente"    value={pending.length}     icon="⏳" color="warning" />
-          <StatCard label="Événements"    value={upcoming.length}    icon="📅" color="green"   />
-          <StatCard label="Sondages actifs" value={activePolls.length} icon="📊" color="blue"  />
+          <StatCard label="Membres"         value={members.length}     icon="👥" color="blue"    />
+          <StatCard label="En attente"       value={pending.length}     icon="⏳" color="warning" />
+          <StatCard label="Événements"       value={upcoming.length}    icon="📅" color="green"   />
+          <StatCard label="Sondages actifs"  value={activePolls.length} icon="📊" color="blue"    />
         </div>
 
         {pending.length > 0 && (
@@ -69,7 +79,30 @@ export default function DashboardHome() {
           </div>
         )}
 
+        {/* ── NIVEAU + STREAK ───────────────────────────────────── */}
+        <div className="card dash-section" style={{ marginBottom: 16 }}>
+          <div className="dash-section-header">
+            <span className="dash-section-title">
+              Niveau du club
+              {streak >= 2 && (
+                <span style={{ marginLeft: 10, fontSize: 12, color: 'var(--warning)', fontWeight: 500 }}>
+                  {streakLabel}
+                </span>
+              )}
+            </span>
+            <Link to="/classement">
+              <Button variant="secondary" size="sm">🏆 Classement</Button>
+            </Link>
+          </div>
+          <LevelProgress
+            levelInfo={score.levelInfo}
+            points={score.totalPoints}
+            progressPct={score.progressPct}
+          />
+        </div>
+
         <div className="dash-two-cols">
+          {/* Prochains événements */}
           <div className="dash-section card">
             <div className="dash-section-header">
               <h2 className="dash-section-title">Prochains événements</h2>
@@ -113,7 +146,7 @@ export default function DashboardHome() {
             </div>
           </div>
 
-          
+          {/* Demandes d'adhésion */}
           <div className="dash-section card">
             <div className="dash-section-header">
               <h2 className="dash-section-title">Demandes d'adhésion</h2>
@@ -127,7 +160,6 @@ export default function DashboardHome() {
             ) : (
               <div className="dash-pending-list">
                 {pending.slice(0, 3).map((m) => {
-                  const u = mockMemberships.find((mb) => mb.id === m.id);
                   return (
                     <div key={m.id} className="dash-pending-row">
                       <div className="dash-pending-avatar">
@@ -155,10 +187,12 @@ export default function DashboardHome() {
               </Link>
             </div>
           </div>
-
         </div>
 
-      
+        {/* ── DÉFIS ACTIFS ─────────────────────────────────────── */}
+        <ChallengesPanel challenges={challenges} />
+
+        {/* Mon club */}
         <div className="card dash-club-info">
           <div className="dash-section-header">
             <h2 className="dash-section-title">Mon club</h2>

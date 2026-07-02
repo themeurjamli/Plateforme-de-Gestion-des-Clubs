@@ -1,0 +1,275 @@
+.classement-page {
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+.classement-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 36px 24px 60px;
+}
+
+.classement-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.classement-title {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+
+.classement-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.scoring-explain {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 20px;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.scoring-explain-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.scoring-rules {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-hint);
+}
+
+.scoring-rules strong { color: var(--primary); }
+
+.podium {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+  align-items: end;
+}
+
+.podium-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  transition: box-shadow 0.2s;
+  position: relative;
+}
+
+.podium-card:hover { box-shadow: var(--shadow-md); }
+
+.podium-1 {
+  border-color: rgba(255, 215, 0, 0.4);
+  background: linear-gradient(180deg, rgba(255,215,0,0.05) 0%, var(--bg-card) 100%);
+  order: 2;
+  padding-top: 28px;
+}
+
+.podium-2 {
+  border-color: rgba(168,169,173,0.3);
+  order: 1;
+}
+
+.podium-3 {
+  border-color: rgba(205,127,50,0.3);
+  order: 3;
+}
+
+.podium-medal {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.podium-rank {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-hint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.podium-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 24px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(59,130,246,0.2);
+}
+
+.podium-1 .podium-logo {
+  width: 64px;
+  height: 64px;
+  font-size: 28px;
+  border-color: rgba(255,215,0,0.4);
+  background: rgba(255,215,0,0.1);
+  color: #FFD700;
+}
+
+.podium-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.podium-pts {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.5px;
+}
+
+.podium-1 .podium-pts { color: #FFD700; font-size: 24px; }
+
+.podium-stats {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-hint);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.classement-table-wrap { padding: 0; overflow: hidden; }
+
+.classement-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.classement-table th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-hint);
+  border-bottom: 1px solid var(--border);
+}
+
+.classement-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text-secondary);
+}
+
+.classement-table tr:last-child td { border-bottom: none; }
+.classement-table tr:hover td { background: var(--bg-input); }
+
+.rank-cell { width: 48px; }
+.rank-num { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+
+.club-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.club-cell-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(59,130,246,0.2);
+}
+
+.club-cell-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+  font-size: 13px;
+}
+
+.pts-cell { font-weight: 700; color: var(--primary); font-size: 14px; }
+
+.progress-cell {
+  display: flex;
+  min-width: 150px;
+}
+.mini-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.progress-cell {
+  min-width: 120px;
+}
+
+.classement-table td.progress-cell {
+  padding: 12px 16px;
+}
+.mini-bar-track {
+  flex: 1;
+  height: 5px;
+  background: var(--bg-input);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.mini-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width 0.4s ease;
+}
+
+.mini-bar-pct {
+  font-size: 11px;
+  color: var(--text-hint);
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.classement-empty {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+@media (max-width: 768px) {
+  .podium           { grid-template-columns: 1fr; }
+  .podium-1, .podium-2, .podium-3 { order: unset; }
+  .scoring-explain  { flex-direction: column; align-items: flex-start; }
+  .progress-cell    { min-width: 80px; }
+}

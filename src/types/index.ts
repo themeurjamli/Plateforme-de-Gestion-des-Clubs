@@ -1,4 +1,3 @@
-// UTILISATEUR 
 
 export type UserRole = 'visitor' | 'member' | 'president' | 'admin';
 
@@ -14,11 +13,10 @@ export interface User {
   bio?: string;
   interests?: string[];
   avatarUrl?: string;
-  clubId?: string; // rempli seulement si le user est président
+  clubId?: string; 
   createdAt: string;
 }
 
-//  CLUB 
 
 export type ClubCategory =
   | 'Tech'
@@ -44,7 +42,6 @@ export interface Club {
   createdAt: string;
 }
 
-// ADHÉSION 
 
 export type MembershipStatus = 'pending' | 'member' | 'banned';
 
@@ -56,7 +53,6 @@ export interface Membership {
   joinedAt: string;
 }
 
-//  ÉVÉNEMENT 
 
 export type EventVisibility = 'public' | 'members_only';
 
@@ -85,7 +81,6 @@ export interface EventRegistration {
   registeredAt: string;
 }
 
-// SONDAGE 
 
 export type PollStatus = 'active' | 'closed';
 
@@ -112,4 +107,13 @@ export interface PollVote {
   userId: string;
   optionId: string;
   votedAt: string;
+}
+
+export interface EventRating {
+  id: string;
+  eventId: string;
+  userId: string;
+  rating: number; 
+  comment?: string;
+  createdAt: string;
 }
