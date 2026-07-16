@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Button from '../components/ui/Button';
 import { CategoryBadge, ClubStatusBadge } from '../components/ui/Badge';
@@ -14,9 +14,10 @@ const CATEGORIES: ClubCategory[] = [
 
 export default function ClubsPage() {
   const { user } = useAuth();
-  const [search,   setSearch]   = useState('');
+  const navigate = useNavigate();
+  const [search, setSearch] = useState('');
   const [category, setCategory] = useState<ClubCategory | 'Tous'>('Tous');
-  const [sort,     setSort]     = useState<'members' | 'events' | 'name'>('members');
+  const [sort, setSort] = useState<'members' | 'events' | 'name'>('members');
   const activeClubs = mockClubs.filter((c) => c.status === 'active');
   const filtered = activeClubs
     .filter((c) =>
@@ -28,9 +29,17 @@ export default function ClubsPage() {
     )
     .sort((a, b) => {
       if (sort === 'members') return b.membersCount - a.membersCount;
-      if (sort === 'events')  return b.eventsCount  - a.eventsCount;
+      if (sort === 'events') return b.eventsCount - a.eventsCount;
       return a.name.localeCompare(b.name);
     });
+  const canCreateClub = user &&
+    user.role === 'member' &&
+    !user.clubId &&
+    user.status !== 'banned';
+
+  const handleCreateClub = () => {
+    navigate('/create-club');
+  };
 
   return (
     <div className="clubs-page">
@@ -102,7 +111,6 @@ export default function ClubsPage() {
             ))}
           </div>
         )}
-
       </div>
     </div>
   );
@@ -113,8 +121,8 @@ export default function ClubsPage() {
 function ClubRow({ club, userId }: { club: Club; userId?: string }) {
   const membership = userId
     ? mockMemberships.find(
-        (m) => m.userId === userId && m.clubId === club.id
-      )
+      (m) => m.userId === userId && m.clubId === club.id
+    )
     : null;
 
   return (
@@ -125,7 +133,7 @@ function ClubRow({ club, userId }: { club: Club; userId?: string }) {
         {club.name[0]}
       </div>
 
-      
+
       <div className="club-row-body">
         <div className="club-row-top">
           <div className="club-row-name-wrap">
@@ -140,7 +148,7 @@ function ClubRow({ club, userId }: { club: Club; userId?: string }) {
         <p className="club-row-desc">{club.description}</p>
       </div>
 
-     
+
       <div className="club-row-actions">
         <Link to={`/clubs/${club.id}`}>
           <Button variant="secondary" size="sm">Voir</Button>
