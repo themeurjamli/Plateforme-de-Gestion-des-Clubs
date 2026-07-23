@@ -211,7 +211,6 @@
   border: 1px solid var(--danger-border);
 }
 
-/* ─── DÉCOUVRIR ──────────────────────────────────────────── */
 .myclubs-discover {
   display: flex;
   align-items: center;
@@ -227,8 +226,48 @@
   font-size: 14px;
   color: var(--text-secondary);
 }
+.myclubs-bottom-row {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+}
 
-/* ─── RESPONSIVE ─────────────────────────────────────────── */
+.myclubs-discover {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  flex: 1;
+}
+
+.myclubs-discover p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.myclubs-create-club {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--primary-light);
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  flex: 1;
+}
+
+.myclubs-create-club p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+  .myclubs-bottom-row { flex-direction: column; }
+}
+
 @media (max-width: 640px) {
   .myclubs-grid      { grid-template-columns: 1fr; }
   .myclubs-event-row { flex-wrap: wrap; }

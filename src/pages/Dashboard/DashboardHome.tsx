@@ -1,58 +1,87 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../../components/layout/Sidebar';
 import PageHeader from '../../components/ui/Pageheader';
 import StatCard from '../../components/ui/Statcard';
 import Button from '../../components/ui/Button';
-import ChallengesPanel from '../../components/ui/ChallengesPanel';
-import { LevelProgress } from '../../components/ui/LevelBadge';
 import { useAuth } from '../../context/AuthContext';
-import { calculateClubScore } from '../../utils/scoring';
-import { calculateEventStreak, getStreakLabel } from '../../utils/streak';
-import { getClubChallenges } from '../../utils/challenges';
-import {
-  mockClubs,
-  mockMemberships,
-  mockEvents,
-  mockPolls,
-} from '../../data/mockData';
+import { getClubByIdAPI } from '../../services/club.service';
+import { getClubMembersAPI, getClubPendingAPI } from '../../services/club.service';
+import { getClubEventsAPI } from '../../services/event.service';
+import { getClubPollsAPI } from '../../services/poll.service';
 import './Dashboard.css';
 
 export default function DashboardHome() {
   const { user } = useAuth();
 
-  const club = mockClubs.find((c) => c.presidentId === user?.id);
+  const [club,     setClub]     = useState<any>(null);
+  const [members,  setMembers]  = useState<any[]>([]);
+  const [pending,  setPending]  = useState<any[]>([]);
+  const [events,   setEvents]   = useState<any[]>([]);
+  const [polls,    setPolls]    = useState<any[]>([]);
+  const [loading,  setLoading]  = useState(true);
 
-  if (!club) {
+  useEffect(() => {
+    if (!user?.clubId) { setLoading(false); return; }
+
+    const fetchAll = async () => {
+      try {
+        const clubId = user.clubId as string;
+        const [clubData, membersData, pendingData, eventsData, pollsData] =
+          await Promise.all([
+            getClubByIdAPI(clubId),
+            getClubMembersAPI(clubId),
+            getClubPendingAPI(clubId),
+            getClubEventsAPI(clubId),
+            getClubPollsAPI(clubId),
+          ]);
+        setClub(clubData);
+        setMembers(membersData);
+        setPending(pendingData);
+        setEvents(eventsData);
+        setPolls(pollsData);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="dashboard-layout">
+        <Sidebar />
+        <div className="dashboard-content">
+          <p className="dash-empty">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user?.clubId || !club) {
     return (
       <div className="dashboard-layout">
         <Sidebar />
         <div className="dashboard-content">
           <p className="dash-no-club">
-            Vous n'avez pas encore de club. Créez-en un !
+            Vous n'avez pas encore de club.{' '}
+            <Link to="/creer-club" style={{ color: 'var(--primary)' }}>
+              Créer un club →
+            </Link>
           </p>
         </div>
       </div>
     );
   }
 
-  const members     = mockMemberships.filter((m) => m.clubId === club.id && m.status === 'member');
-  const pending     = mockMemberships.filter((m) => m.clubId === club.id && m.status === 'pending');
-  const events      = mockEvents.filter((e) => e.clubId === club.id);
-  const upcoming    = events.filter((e) => e.status === 'upcoming');
-  const polls       = mockPolls.filter((p) => p.clubId === club.id);
-  const activePolls = polls.filter((p) => p.status === 'active');
-
-  // ── Niveau 2 : score, streak, défis ─────────────────────
-  const score      = calculateClubScore(club, events, polls, mockMemberships);
-  const streak     = calculateEventStreak(events);
-  const streakLabel = getStreakLabel(streak);
-  const challenges = getClubChallenges(club, events, mockMemberships, polls);
+  const upcoming    = events.filter((e: any) => e.status === 'upcoming');
+  const activePolls = polls.filter((p: any)  => p.status === 'active');
 
   return (
     <div className="dashboard-layout">
       <Sidebar />
-
       <div className="dashboard-content">
 
         <PageHeader
@@ -61,17 +90,17 @@ export default function DashboardHome() {
         />
 
         <div className="dash-stats-grid">
-          <StatCard label="Membres"         value={members.length}     icon="👥" color="blue"    />
-          <StatCard label="En attente"       value={pending.length}     icon="⏳" color="warning" />
-          <StatCard label="Événements"       value={upcoming.length}    icon="📅" color="green"   />
-          <StatCard label="Sondages actifs"  value={activePolls.length} icon="📊" color="blue"    />
+          <StatCard label="Membres"        value={members.length}     icon="👥" color="blue"    />
+          <StatCard label="En attente"     value={pending.length}     icon="⏳" color="warning" />
+          <StatCard label="Événements"     value={upcoming.length}    icon="📅" color="green"   />
+          <StatCard label="Sondages actifs" value={activePolls.length} icon="📊" color="blue"   />
         </div>
 
         {pending.length > 0 && (
           <div className="dash-alert">
             <span>🔔</span>
             <span>
-              <strong>{pending.length} demande{pending.length > 1 ? 's' : ''}</strong> d'adhésion en attente de validation
+              <strong>{pending.length} demande{pending.length > 1 ? 's' : ''}</strong> d'adhésion en attente
             </span>
             <Link to="/dashboard/membres">
               <Button variant="primary" size="sm">Voir →</Button>
@@ -79,30 +108,8 @@ export default function DashboardHome() {
           </div>
         )}
 
-        {/* ── NIVEAU + STREAK ───────────────────────────────────── */}
-        <div className="card dash-section" style={{ marginBottom: 16 }}>
-          <div className="dash-section-header">
-            <span className="dash-section-title">
-              Niveau du club
-              {streak >= 2 && (
-                <span style={{ marginLeft: 10, fontSize: 12, color: 'var(--warning)', fontWeight: 500 }}>
-                  {streakLabel}
-                </span>
-              )}
-            </span>
-            <Link to="/classement">
-              <Button variant="secondary" size="sm">🏆 Classement</Button>
-            </Link>
-          </div>
-          <LevelProgress
-            levelInfo={score.levelInfo}
-            points={score.totalPoints}
-            progressPct={score.progressPct}
-          />
-        </div>
-
         <div className="dash-two-cols">
-          {/* Prochains événements */}
+
           <div className="dash-section card">
             <div className="dash-section-header">
               <h2 className="dash-section-title">Prochains événements</h2>
@@ -110,13 +117,12 @@ export default function DashboardHome() {
                 <Button variant="secondary" size="sm">Gérer</Button>
               </Link>
             </div>
-
             {upcoming.length === 0 ? (
               <p className="dash-empty">Aucun événement à venir.</p>
             ) : (
               <div className="dash-events-list">
-                {upcoming.slice(0, 3).map((event) => (
-                  <div key={event.id} className="dash-event-row">
+                {upcoming.slice(0, 3).map((event: any) => (
+                  <div key={event._id} className="dash-event-row">
                     <div className="dash-event-date">
                       <span className="dash-event-day">
                         {new Date(event.date).getDate()}
@@ -128,7 +134,7 @@ export default function DashboardHome() {
                     <div className="dash-event-info">
                       <span className="dash-event-name">{event.title}</span>
                       <span className="dash-event-meta">
-                        {event.registeredCount}
+                        {event.registeredCount ?? 0}
                         {event.maxCapacity ? ` / ${event.maxCapacity}` : ''} inscrits · {event.location}
                       </span>
                     </div>
@@ -136,17 +142,13 @@ export default function DashboardHome() {
                 ))}
               </div>
             )}
-
             <div className="dash-section-footer">
               <Link to="/dashboard/evenements">
-                <Button variant="primary" size="sm" fullWidth>
-                  + Créer un événement
-                </Button>
+                <Button variant="primary" size="sm" fullWidth>+ Créer un événement</Button>
               </Link>
             </div>
           </div>
 
-          {/* Demandes d'adhésion */}
           <div className="dash-section card">
             <div className="dash-section-header">
               <h2 className="dash-section-title">Demandes d'adhésion</h2>
@@ -154,45 +156,36 @@ export default function DashboardHome() {
                 <Button variant="secondary" size="sm">Tout voir</Button>
               </Link>
             </div>
-
             {pending.length === 0 ? (
               <p className="dash-empty">Aucune demande en attente. 🎉</p>
             ) : (
               <div className="dash-pending-list">
-                {pending.slice(0, 3).map((m) => {
-                  return (
-                    <div key={m.id} className="dash-pending-row">
-                      <div className="dash-pending-avatar">
-                        {m.userId[0].toUpperCase()}
-                      </div>
-                      <div className="dash-pending-info">
-                        <span className="dash-pending-name">
-                          Utilisateur {m.userId}
-                        </span>
-                        <span className="dash-pending-date">
-                          Demande du {m.joinedAt}
-                        </span>
-                      </div>
+                {pending.slice(0, 3).map((m: any) => (
+                  <div key={m._id} className="dash-pending-row">
+                    <div className="dash-pending-avatar">
+                      {m.userId?.firstName?.[0]}{m.userId?.lastName?.[0]}
                     </div>
-                  );
-                })}
+                    <div className="dash-pending-info">
+                      <span className="dash-pending-name">
+                        {m.userId?.firstName} {m.userId?.lastName}
+                      </span>
+                      <span className="dash-pending-date">
+                        {m.userId?.email}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
-
             <div className="dash-section-footer">
               <Link to="/dashboard/membres">
-                <Button variant="secondary" size="sm" fullWidth>
-                  Gérer les adhésions
-                </Button>
+                <Button variant="secondary" size="sm" fullWidth>Gérer les adhésions</Button>
               </Link>
             </div>
           </div>
+
         </div>
 
-        {/* ── DÉFIS ACTIFS ─────────────────────────────────────── */}
-        <ChallengesPanel challenges={challenges} />
-
-        {/* Mon club */}
         <div className="card dash-club-info">
           <div className="dash-section-header">
             <h2 className="dash-section-title">Mon club</h2>

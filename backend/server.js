@@ -1,29 +1,31 @@
 require('dotenv').config();
-const express    = require('express');
-const cors       = require('cors');
-const connectDB  = require('./config/db');
+const express   = require('express');
+const cors      = require('cors');
+const connectDB = require('./config/db');
 
 const authRoutes    = require('./routes/auth.routes');
 const clubRoutes    = require('./routes/clubs.routes');
 const memberRoutes  = require('./routes/members.routes');
 const eventRoutes   = require('./routes/events.routes');
 const pollRoutes    = require('./routes/polls.routes');
+const userRoutes    = require('./routes/users.routes');
 
 connectDB();
 
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:3000', 
+  origin:      'http://localhost:3000',
   credentials: true,
 }));
-app.use(express.json()); 
+app.use(express.json());
 
 app.use('/api/auth',        authRoutes);
 app.use('/api/clubs',       clubRoutes);
 app.use('/api/memberships', memberRoutes);
 app.use('/api/events',      eventRoutes);
 app.use('/api/polls',       pollRoutes);
+app.use('/api/users',       userRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Serveur opérationnel 🚀' });

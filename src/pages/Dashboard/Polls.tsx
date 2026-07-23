@@ -1,120 +1,100 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
 import PageHeader from '../../components/ui/Pageheader';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useAuth } from '../../context/AuthContext';
-import { mockClubs, mockPolls, mockVotes } from '../../data/mockData';
-import { Poll, PollVote } from '../../types/index';
+import {
+  getClubPollsAPI,
+  createPollAPI,
+  voteAPI,
+  closePollAPI,
+  deletePollAPI,
+} from '../../services/poll.service';
 import './Dashboard.css';
 
 export default function PollsPage() {
   const { user } = useAuth();
-  const club = mockClubs.find((c) => c.presidentId === user?.id);
+  const clubId = user?.clubId as string;
 
-  const [polls, setPolls]   = useState<Poll[]>(
-    mockPolls.filter((p) => p.clubId === club?.id)
-  );
-  const [votes, setVotes]   = useState<PollVote[]>([...mockVotes]);
-  const [showForm, setShowForm] = useState(false);
-  const [question, setQuestion] = useState('');
-  const [options,  setOptions]  = useState(['', '']);
-  const [errors,   setErrors]   = useState<Record<string, string>>({});
+  const [polls,     setPolls]     = useState<any[]>([]);
+  const [myVotes,   setMyVotes]   = useState<Record<string, string>>({});
+  const [loading,   setLoading]   = useState(true);
+  const [showForm,  setShowForm]  = useState(false);
+  const [question,  setQuestion]  = useState('');
+  const [options,   setOptions]   = useState(['', '']);
+  const [errors,    setErrors]    = useState<Record<string, string>>({});
 
-  if (!club) return null;
-
-  const addOption = () => {
-    if (options.length >= 6) return;
-    setOptions([...options, '']);
-  };
-
-  const updateOption = (index: number, value: string) => {
-    const updated = [...options];
-    updated[index] = value;
-    setOptions(updated);
-  };
-
-  const removeOption = (index: number) => {
-    if (options.length <= 2) return;
-    setOptions(options.filter((_, i) => i !== index));
-  };
+  useEffect(() => {
+    if (!clubId) return;
+    const fetchPolls = async () => {
+      try {
+        const data = await getClubPollsAPI(clubId);
+        setPolls(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPolls();
+  }, [clubId]);
 
   const validate = () => {
     const e: Record<string, string> = {};
     if (!question.trim()) e.question = 'La question est requise';
-    const filledOptions = options.filter((o) => o.trim());
-    if (filledOptions.length < 2) e.options = 'Au moins 2 options sont requises';
+    if (options.filter((o) => o.trim()).length < 2)
+      e.options = 'Au moins 2 options sont requises';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!validate()) return;
-    const filledOptions = options.filter((o) => o.trim());
-    const newPoll: Poll = {
-      id:         `p${Date.now()}`,
-      clubId:     club.id,
-      question:   question.trim(),
-      options:    filledOptions.map((label, i) => ({
-        id:         `o${Date.now()}_${i}`,
-        label,
-        votesCount: 0,
-      })),
-      status:     'active',
-      totalVotes: 0,
-      createdAt:  new Date().toISOString().split('T')[0],
-    };
-    setPolls([newPoll, ...polls]);
-    setShowForm(false);
-    setQuestion('');
-    setOptions(['', '']);
-    setErrors({});
-  };
-
-  const handleClose = (pollId: string) => {
-    if (!window.confirm('Clôturer ce sondage ? Les membres ne pourront plus voter.')) return;
-    setPolls((prev) =>
-      prev.map((p) =>
-        p.id === pollId
-          ? { ...p, status: 'closed', closedAt: new Date().toISOString().split('T')[0] }
-          : p
-      )
-    );
-  };
-
-  const handleDelete = (pollId: string, question: string) => {
-    if (!window.confirm(`Supprimer le sondage "${question}" ?`)) return;
-    setPolls((prev) => prev.filter((p) => p.id !== pollId));
-  };
-
-  const handleVote = (pollId: string, optionId: string) => {
-    const alreadyVoted = votes.some(
-      (v) => v.pollId === pollId && v.userId === user!.id
-    );
-    if (alreadyVoted) {
-      alert('Vous avez déjà voté pour ce sondage.');
-      return;
+    try {
+      const newPoll = await createPollAPI({
+        clubId,
+        question: question.trim(),
+        options:  options.filter((o) => o.trim()),
+      });
+      setPolls([newPoll, ...polls]);
+      setShowForm(false);
+      setQuestion('');
+      setOptions(['', '']);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Erreur lors de la création.');
     }
-    setVotes([
-      ...votes,
-      { id: `v${Date.now()}`, pollId, userId: user!.id, optionId, votedAt: new Date().toISOString().split('T')[0] },
-    ]);
-    setPolls((prev) =>
-      prev.map((p) => {
-        if (p.id !== pollId) return p;
-        return {
-          ...p,
-          totalVotes: p.totalVotes + 1,
-          options: p.options.map((o) =>
-            o.id === optionId ? { ...o, votesCount: o.votesCount + 1 } : o
-          ),
-        };
-      })
-    );
   };
 
-  const hasVoted = (pollId: string) =>
-    votes.some((v) => v.pollId === pollId && v.userId === user?.id);
+  const handleVote = async (pollId: string, optionId: string) => {
+    try {
+      const updated = await voteAPI(pollId, optionId);
+      setPolls((prev) => prev.map((p) => (p._id === pollId ? updated : p)));
+      setMyVotes((prev) => ({ ...prev, [pollId]: optionId }));
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Erreur lors du vote.');
+    }
+  };
+
+  const handleClose = async (pollId: string) => {
+    if (!window.confirm('Clôturer ce sondage ?')) return;
+    try {
+      const updated = await closePollAPI(pollId);
+      setPolls((prev) => prev.map((p) => (p._id === pollId ? updated : p)));
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Erreur');
+    }
+  };
+
+  const handleDelete = async (pollId: string, question: string) => {
+    if (!window.confirm(`Supprimer le sondage "${question}" ?`)) return;
+    try {
+      await deletePollAPI(pollId);
+      setPolls((prev) => prev.filter((p) => p._id !== pollId));
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Erreur');
+    }
+  };
 
   const activePolls = polls.filter((p) => p.status === 'active');
   const closedPolls = polls.filter((p) => p.status === 'closed');
@@ -143,7 +123,7 @@ export default function PollsPage() {
             <div style={{ marginBottom: 16 }}>
               <Input
                 label="Question"
-                placeholder="Ex : Quel jour préférez-vous pour l'atelier ?"
+                placeholder="Ex : Quel jour préférez-vous ?"
                 value={question}
                 onChange={setQuestion}
                 error={errors.question}
@@ -153,7 +133,7 @@ export default function PollsPage() {
 
             <div style={{ marginBottom: 8 }}>
               <label className="input-label">
-                Options de réponse <span style={{ color: 'var(--danger)' }}>*</span>
+                Options <span style={{ color: 'var(--danger)' }}>*</span>
               </label>
               {errors.options && (
                 <p style={{ fontSize: 11, color: 'var(--danger)', marginBottom: 6 }}>
@@ -169,11 +149,19 @@ export default function PollsPage() {
                     <Input
                       placeholder={`Option ${i + 1}`}
                       value={opt}
-                      onChange={(v) => updateOption(i, v)}
+                      onChange={(v) => {
+                        const updated = [...options];
+                        updated[i] = v;
+                        setOptions(updated);
+                      }}
                     />
                   </div>
                   {options.length > 2 && (
-                    <Button variant="danger" size="sm" onClick={() => removeOption(i)}>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => setOptions(options.filter((_, idx) => idx !== i))}
+                    >
                       ✕
                     </Button>
                   )}
@@ -182,7 +170,11 @@ export default function PollsPage() {
             </div>
 
             {options.length < 6 && (
-              <Button variant="secondary" size="sm" onClick={addOption}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setOptions([...options, ''])}
+              >
                 + Ajouter une option
               </Button>
             )}
@@ -190,7 +182,12 @@ export default function PollsPage() {
             <div className="dash-form-actions">
               <Button
                 variant="secondary"
-                onClick={() => { setShowForm(false); setQuestion(''); setOptions(['', '']); setErrors({}); }}
+                onClick={() => {
+                  setShowForm(false);
+                  setQuestion('');
+                  setOptions(['', '']);
+                  setErrors({});
+                }}
               >
                 Annuler
               </Button>
@@ -203,20 +200,23 @@ export default function PollsPage() {
 
         <h2 className="events-section-title">Actifs ({activePolls.length})</h2>
 
-        {activePolls.length === 0 ? (
+        {loading ? (
+          <div className="card dash-empty">Chargement...</div>
+        ) : activePolls.length === 0 ? (
           <div className="card dash-empty" style={{ marginBottom: 20 }}>
             Aucun sondage actif.
           </div>
         ) : (
           <div className="polls-grid">
-            {activePolls.map((poll) => (
+            {activePolls.map((poll: any) => (
               <PollCard
-                key={poll.id}
+                key={poll._id}
                 poll={poll}
-                voted={hasVoted(poll.id)}
-                onVote={(optId) => handleVote(poll.id, optId)}
-                onClose={() => handleClose(poll.id)}
-                onDelete={() => handleDelete(poll.id, poll.question)}
+                voted={!!myVotes[poll._id]}
+                selectedOption={myVotes[poll._id]}
+                onVote={(optId) => handleVote(poll._id, optId)}
+                onClose={() => handleClose(poll._id)}
+                onDelete={() => handleDelete(poll._id, poll.question)}
               />
             ))}
           </div>
@@ -228,13 +228,13 @@ export default function PollsPage() {
               Clôturés ({closedPolls.length})
             </h2>
             <div className="polls-grid">
-              {closedPolls.map((poll) => (
+              {closedPolls.map((poll: any) => (
                 <PollCard
-                  key={poll.id}
+                  key={poll._id}
                   poll={poll}
-                  voted={hasVoted(poll.id)}
+                  voted={true}
                   onVote={() => {}}
-                  onDelete={() => handleDelete(poll.id, poll.question)}
+                  onDelete={() => handleDelete(poll._id, poll.question)}
                 />
               ))}
             </div>
@@ -248,17 +248,14 @@ export default function PollsPage() {
 
 
 function PollCard({
-  poll,
-  voted,
-  onVote,
-  onClose,
-  onDelete,
+  poll, voted, selectedOption, onVote, onClose, onDelete,
 }: {
-  poll: Poll;
-  voted: boolean;
-  onVote: (optionId: string) => void;
-  onClose?: () => void;
-  onDelete: () => void;
+  poll:            any;
+  voted:           boolean;
+  selectedOption?: string;
+  onVote:          (optionId: string) => void;
+  onClose?:        () => void;
+  onDelete:        () => void;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -269,7 +266,6 @@ function PollCard({
 
   return (
     <div className="card poll-card-dash">
-
       <div className="poll-card-header-dash">
         <h3 className="poll-question-dash">{poll.question}</h3>
         <span className={`poll-status-badge ${poll.status === 'active' ? 'poll-status-active' : 'poll-status-closed'}`}>
@@ -277,21 +273,23 @@ function PollCard({
         </span>
       </div>
 
-      <p className="poll-total-dash">{poll.totalVotes} votes · Créé le {poll.createdAt}</p>
+      <p className="poll-total-dash">
+        {poll.options?.reduce((s: number, o: any) => s + o.votesCount, 0) ?? 0} votes
+      </p>
+
       <div className="poll-options-dash">
-        {poll.options.map((opt) => {
-          const pct = poll.totalVotes > 0
-            ? Math.round((opt.votesCount / poll.totalVotes) * 100)
-            : 0;
+        {poll.options?.map((opt: any) => {
+          const total = poll.options.reduce((s: number, o: any) => s + o.votesCount, 0);
+          const pct   = total > 0 ? Math.round((opt.votesCount / total) * 100) : 0;
           return (
-            <div key={opt.id} className="poll-option-dash">
+            <div key={opt._id} className="poll-option-dash">
               {poll.status === 'active' && !voted && (
                 <input
                   type="radio"
-                  name={`poll-${poll.id}`}
-                  value={opt.id}
-                  checked={selected === opt.id}
-                  onChange={() => setSelected(opt.id)}
+                  name={`poll-${poll._id}`}
+                  value={opt._id}
+                  checked={selected === opt._id}
+                  onChange={() => setSelected(opt._id)}
                   className="poll-radio"
                 />
               )}
@@ -311,23 +309,16 @@ function PollCard({
 
       <div className="poll-actions-dash">
         {poll.status === 'active' && !voted && (
-          <Button variant="primary" size="sm" onClick={handleVote}>
-            Voter
-          </Button>
+          <Button variant="primary" size="sm" onClick={handleVote}>Voter</Button>
         )}
         {voted && poll.status === 'active' && (
           <span style={{ fontSize: 12, color: 'var(--success)' }}>✓ Voté</span>
         )}
         {poll.status === 'active' && onClose && (
-          <Button variant="secondary" size="sm" onClick={onClose}>
-            Clôturer
-          </Button>
+          <Button variant="secondary" size="sm" onClick={onClose}>Clôturer</Button>
         )}
-        <Button variant="danger" size="sm" onClick={onDelete}>
-          Supprimer
-        </Button>
+        <Button variant="danger" size="sm" onClick={onDelete}>Supprimer</Button>
       </div>
-
     </div>
   );
 }

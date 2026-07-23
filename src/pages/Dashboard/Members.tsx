@@ -1,49 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
 import PageHeader from '../../components/ui/Pageheader';
 import Button from '../../components/ui/Button';
 import { MembershipStatusBadge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
-import { mockClubs, mockMemberships, mockUsers } from '../../data/mockData';
+import {
+  getClubMembersAPI,
+  getClubPendingAPI,
+} from '../../services/club.service';
+import {
+  updateMembershipAPI,
+  removeMemberAPI,
+} from '../../services/member.service';
 import './Dashboard.css';
 
 export default function MembersPage() {
   const { user } = useAuth();
-  const club = mockClubs.find((c) => c.presidentId === user?.id);
-  const [memberships, setMemberships] = useState([...mockMemberships]);
-  const [activeTab, setActiveTab] = useState<'pending' | 'members'>('pending');
 
-  if (!club) return null;
+  const [members,    setMembers]    = useState<any[]>([]);
+  const [pending,    setPending]    = useState<any[]>([]);
+  const [activeTab,  setActiveTab]  = useState<'pending' | 'members'>('pending');
+  const [loading,    setLoading]    = useState(true);
 
-  const pending = memberships.filter(
-    (m) => m.clubId === club.id && m.status === 'pending'
-  );
-  const members = memberships.filter(
-    (m) => m.clubId === club.id && m.status === 'member'
-  );
+  const clubId = user?.clubId as string;
 
-  const handleAccept = (membershipId: string) => {
-    setMemberships((prev) =>
-      prev.map((m) =>
-        m.id === membershipId ? { ...m, status: 'member' } : m
-      )
-    );
+  useEffect(() => {
+    if (!clubId) return;
+    const fetchData = async () => {
+      try {
+        const [m, p] = await Promise.all([
+          getClubMembersAPI(clubId),
+          getClubPendingAPI(clubId),
+        ]);
+        setMembers(m);
+        setPending(p);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [clubId]);
+
+  const handleAccept = async (membershipId: string) => {
+    try {
+      await updateMembershipAPI(membershipId, 'member');
+      const accepted = pending.find((m) => m._id === membershipId);
+      setPending((prev) => prev.filter((m) => m._id !== membershipId));
+      if (accepted) setMembers((prev) => [...prev, { ...accepted, status: 'member' }]);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Erreur');
+    }
   };
 
-  const handleRemove = (membershipId: string, name: string) => {
+  const handleRemove = async (membershipId: string, name: string) => {
     if (!window.confirm(`Retirer ${name} du club ?`)) return;
-    setMemberships((prev) => prev.filter((m) => m.id !== membershipId));
+    try {
+      await removeMemberAPI(membershipId);
+      setMembers((prev) => prev.filter((m) => m._id !== membershipId));
+      setPending((prev) => prev.filter((m) => m._id !== membershipId));
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Erreur');
+    }
   };
 
-  const getUserName = (userId: string) => {
-    const u = mockUsers.find((u) => u.id === userId);
-    return u ? `${u.firstName} ${u.lastName}` : userId;
-  };
-
-  const getUserEmail = (userId: string) => {
-    const u = mockUsers.find((u) => u.id === userId);
-    return u?.email ?? '';
-  };
+  if (loading) {
+    return (
+      <div className="dashboard-layout">
+        <Sidebar />
+        <div className="dashboard-content"><p className="dash-empty">Chargement...</p></div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-layout">
@@ -85,38 +114,34 @@ export default function MembersPage() {
                   <tr>
                     <th>Utilisateur</th>
                     <th>Email</th>
-                    <th>Date de demande</th>
-                    <th>Statut</th>
+                    <th>Date</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {pending.map((m) => (
-                    <tr key={m.id}>
+                  {pending.map((m: any) => (
+                    <tr key={m._id}>
                       <td>
                         <div className="dash-actions">
                           <div className="dash-pending-avatar" style={{ width: 30, height: 30, fontSize: 11 }}>
-                            {getUserName(m.userId)[0]}
+                            {m.userId?.firstName?.[0]}{m.userId?.lastName?.[0]}
                           </div>
-                          <span className="dash-table-name">{getUserName(m.userId)}</span>
+                          <span className="dash-table-name">
+                            {m.userId?.firstName} {m.userId?.lastName}
+                          </span>
                         </div>
                       </td>
-                      <td>{getUserEmail(m.userId)}</td>
-                      <td>{m.joinedAt}</td>
-                      <td><MembershipStatusBadge status={m.status} /></td>
+                      <td>{m.userId?.email}</td>
+                      <td>{new Date(m.createdAt).toLocaleDateString('fr-FR')}</td>
                       <td>
                         <div className="dash-actions">
-                          <Button
-                            variant="success"
-                            size="sm"
-                            onClick={() => handleAccept(m.id)}
-                          >
+                          <Button variant="success" size="sm" onClick={() => handleAccept(m._id)}>
                             ✓ Accepter
                           </Button>
                           <Button
                             variant="danger"
                             size="sm"
-                            onClick={() => handleRemove(m.id, getUserName(m.userId))}
+                            onClick={() => handleRemove(m._id, `${m.userId?.firstName} ${m.userId?.lastName}`)}
                           >
                             ✕ Refuser
                           </Button>
@@ -142,30 +167,30 @@ export default function MembersPage() {
                   <tr>
                     <th>Membre</th>
                     <th>Email</th>
-                    <th>Membre depuis</th>
-                    <th>Statut</th>
+                    <th>Depuis</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {members.map((m) => (
-                    <tr key={m.id}>
+                  {members.map((m: any) => (
+                    <tr key={m._id}>
                       <td>
                         <div className="dash-actions">
                           <div className="dash-pending-avatar" style={{ width: 30, height: 30, fontSize: 11 }}>
-                            {getUserName(m.userId)[0]}
+                            {m.userId?.firstName?.[0]}{m.userId?.lastName?.[0]}
                           </div>
-                          <span className="dash-table-name">{getUserName(m.userId)}</span>
+                          <span className="dash-table-name">
+                            {m.userId?.firstName} {m.userId?.lastName}
+                          </span>
                         </div>
                       </td>
-                      <td>{getUserEmail(m.userId)}</td>
-                      <td>{m.joinedAt}</td>
-                      <td><MembershipStatusBadge status={m.status} /></td>
+                      <td>{m.userId?.email}</td>
+                      <td>{new Date(m.createdAt).toLocaleDateString('fr-FR')}</td>
                       <td>
                         <Button
                           variant="danger"
                           size="sm"
-                          onClick={() => handleRemove(m.id, getUserName(m.userId))}
+                          onClick={() => handleRemove(m._id, `${m.userId?.firstName} ${m.userId?.lastName}`)}
                         >
                           Retirer
                         </Button>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
-import logo from '../assets/LOGO1.png'; 
+import logo from '../assets/LOGO1.png';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -23,28 +23,27 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    const success = login(email, password);
-    setLoading(false);
-
-    if (success) {
+    try {
+      await login(email, password);
       navigate('/');
-    } else {
-      setError('Email introuvable ou compte banni.');
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || 'Email ou mot de passe incorrect.'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="auth-page">
       <div className="auth-card">
-
-        
         <div className="auth-logo">
           <img src={logo} alt="Logo" />
         </div>
         <h1 className="auth-title">Bon retour !</h1>
         <p className="auth-subtitle">Connecte-toi à ton compte</p>
 
-        
         {error && (
           <div className="auth-error">
             <span>⚠</span> {error}
@@ -52,7 +51,6 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleSubmit} className="auth-form">
-
           <div className="form-group">
             <label className="form-label">Email</label>
             <input
@@ -82,23 +80,12 @@ export default function LoginPage() {
           >
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
-
         </form>
 
-        
         <p className="auth-footer">
           Pas encore de compte ?{' '}
           <Link to="/register">S'inscrire</Link>
         </p>
-
-        
-        <div className="auth-hint">
-          <p className="auth-hint-title">Emails de test :</p>
-          <p>admin@test.com → Super Admin</p>
-          <p>president@test.com → Président</p>
-          <p>member@test.com → Membre</p>
-        </div>
-
       </div>
     </div>
   );
