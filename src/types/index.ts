@@ -17,6 +17,14 @@ export interface User {
   createdAt: string;
 }
 
+export interface ClubPhoto {
+  _id?: string;
+  id?: string;
+  url: string;
+  caption?: string;
+  uploadedAt: string;
+  uploadedBy?: string;
+}
 
 export type ClubCategory =
   | 'Tech'
@@ -37,6 +45,7 @@ export interface Club {
   status: ClubStatus;
   presidentId: string;
   logoUrl?: string;
+  gallery?: ClubPhoto[];
   membersCount: number;
   eventsCount: number;
   createdAt: string;

@@ -33,7 +33,7 @@ export function getClubChallenges(
     (e) => e.maxCapacity != null && e.registeredCount >= (e.maxCapacity ?? 0)
   );
 
-  return [
+  const allChallenges: Challenge[] = [
     {
       id: 'event_this_month',
       icon: '📅',
@@ -46,20 +46,20 @@ export function getClubChallenges(
       type: 'monthly',
     },
     {
-      id: 'reach_50_members',
-      icon: '👥',
-      title: 'Club populaire',
-      description: 'Atteins 50 membres actifs',
-      current: clubMembers.length,
-      target: 50,
-      bonusPoints: 30,
-      completed: clubMembers.length >= 50,
+      id: 'new_members',
+      icon: '🤝',
+      title: 'Nouveaux adhérents',
+      description: 'Atteins 10 membres actifs',
+      current: Math.min(clubMembers.length, 10),
+      target: 10,
+      bonusPoints: 25,
+      completed: clubMembers.length >= 10,
       type: 'goal',
     },
     {
       id: 'active_poll',
       icon: '📊',
-      title: 'À l\'écoute',
+      title: 'À l’écoute',
       description: 'Lance un sondage actif',
       current: Math.min(activePolls.length, 1),
       target: 1,
@@ -71,7 +71,7 @@ export function getClubChallenges(
       id: 'full_event',
       icon: '🎯',
       title: 'Sold out !',
-      description: 'Organise un événement complet (100% inscrits)',
+      description: 'Organise un événement complet',
       current: Math.min(fullEvents.length, 1),
       target: 1,
       bonusPoints: 25,
@@ -79,4 +79,15 @@ export function getClubChallenges(
       type: 'goal',
     },
   ];
+
+  const seed = Array.from(club.id).reduce((sum, char) => sum + char.charCodeAt(0), 0) + now.getMonth();
+
+  return allChallenges
+    .map((challenge, index) => ({
+      challenge,
+      sortIndex: (seed + index) % allChallenges.length,
+    }))
+    .sort((a, b) => a.sortIndex - b.sortIndex)
+    .slice(0, 2)
+    .map(({ challenge }) => challenge);
 }

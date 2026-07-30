@@ -31,6 +31,26 @@ const ClubSchema = new mongoose.Schema(
       type:    String,
       default: '',
     },
+    gallery: [
+      {
+        url: {
+          type:     String,
+          required: [true, 'URL de la photo est requise'],
+        },
+        caption: {
+          type:    String,
+          default: '',
+        },
+        uploadedAt: {
+          type:    Date,
+          default: Date.now,
+        },
+        uploadedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref:  'User',
+        },
+      },
+    ],
   },
   {
     timestamps: true,

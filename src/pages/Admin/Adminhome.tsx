@@ -21,7 +21,7 @@ export default function AdminHome() {
         const [clubsData, usersData, eventsData] = await Promise.all([
           getAllClubsAPI(),
           api.get('/users').then((r) => r.data).catch(() => []),
-          api.get('/events/all').then((r) => r.data).catch(() => []),
+          api.get('/events').then((r) => r.data).catch(() => []),
         ]);
         setClubs(clubsData);
         setUsers(usersData);

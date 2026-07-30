@@ -25,6 +25,8 @@ import AdminClubs   from './pages/Admin/Adminclubs';
 import AdminUsers   from './pages/Admin/Adminusers';
 import AdminEvents  from './pages/Admin/Adminevents';
 import AdminStats   from './pages/Admin/Adminstats';
+import AccessDenied  from './pages/AccessDenied';
+
 
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -44,7 +46,7 @@ function RoleRoute({
   const { user, loading } = useAuth();
   if (loading)                       return <LoadingScreen />;
   if (!user)                         return <Navigate to="/login" replace />;
-  if (!roles.includes(user.role))    return <Navigate to="/" replace />;
+  if (!roles.includes(user.role))    return <AccessDenied message="Accès réservé aux administrateurs." />;
   return <>{children}</>;
 }
 

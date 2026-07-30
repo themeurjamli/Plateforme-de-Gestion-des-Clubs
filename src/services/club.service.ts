@@ -19,6 +19,28 @@ export const getClubByIdAPI = async (id: string): Promise<Club> => {
   return res.data;
 };
 
+export const addClubPhotoAPI = async (
+  clubId: string,
+  photo: { url: string; caption?: string }
+): Promise<any> => {
+  const res = await api.post(`/clubs/${clubId}/gallery`, photo);
+  return res.data;
+};
+
+export const deleteClubPhotoAPI = async (clubId: string, photoId: string): Promise<void> => {
+  await api.delete(`/clubs/${clubId}/gallery/${photoId}`);
+};
+
+export const getClubScoreAPI = async (id: string): Promise<any> => {
+  const res = await api.get(`/clubs/${id}/score`);
+  return res.data;
+};
+
+export const getClubRankingAPI = async (): Promise<any[]> => {
+  const res = await api.get('/clubs/ranking');
+  return res.data;
+};
+
 export const createClubAPI = async (data: {
   name:        string;
   description: string;

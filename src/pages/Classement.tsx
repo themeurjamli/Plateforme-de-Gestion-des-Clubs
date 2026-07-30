@@ -3,10 +3,8 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Button from '../components/ui/Button';
 import { CategoryBadge } from '../components/ui/Badge';
-import LevelBadge, { LevelProgress } from '../components/ui/LevelBadge';
-import { rankClubs } from '../utils/scoring';
-import { getAllClubsAPI } from '../services/club.service';
-import api from '../services/api';
+import LevelBadge from '../components/ui/LevelBadge';
+import { getClubRankingAPI } from '../services/club.service';
 import './Classement.css';
 
 const PODIUM_MEDALS = ['🥇', '🥈', '🥉'];
@@ -18,13 +16,7 @@ export default function ClassementPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [clubs, events, polls, memberships] = await Promise.all([
-          getAllClubsAPI(),
-          api.get('/events').then((r) => r.data).catch(() => []),
-          api.get('/polls/all').then((r) => r.data).catch(() => []),
-          api.get('/memberships/all').then((r) => r.data).catch(() => []),
-        ]);
-        const result = rankClubs(clubs, events, polls, memberships);
+        const result = await getClubRankingAPI();
         setRanked(result);
       } catch (err) {
         console.error(err);
@@ -82,8 +74,10 @@ export default function ClassementPage() {
                     <div className="podium-pts">{item.score.totalPoints} pts</div>
                     <LevelBadge levelInfo={item.score.levelInfo} points={item.score.totalPoints} size="sm" />
                     <div className="podium-stats">
-                      <span>👥 {item.score.breakdown.membres / 5} membres</span>
-                      <span>📅 {item.score.breakdown.evenements / 10} événements</span>
+                      <span>👥 {item.score.breakdown.membersCount} membres</span>
+                      <span>📅 {item.score.breakdown.eventsCount} événements</span>
+                      <span>✅ {item.score.breakdown.fullEventsCount} complets</span>
+                      <span>📊 {item.score.breakdown.activePollsCount} sondages actifs</span>
                     </div>
                     <Link to={`/clubs/${item.club._id || item.club.id}`}>
                       <Button variant="secondary" size="sm" fullWidth>Voir le club</Button>
@@ -104,6 +98,7 @@ export default function ClassementPage() {
                       <th>Points</th>
                       <th>Membres</th>
                       <th>Événements</th>
+                      <th>Sondages</th>
                       <th>Progression</th>
                       <th></th>
                     </tr>
@@ -127,13 +122,16 @@ export default function ClassementPage() {
                           <LevelBadge levelInfo={item.score.levelInfo} points={item.score.totalPoints} size="sm" />
                         </td>
                         <td className="pts-cell">{item.score.totalPoints}</td>
-                        <td>{item.score.breakdown.membres / 5}</td>
-                        <td>{item.score.breakdown.evenements / 10}</td>
+                        <td>{item.score.breakdown.membersCount}</td>
+                        <td>{item.score.breakdown.eventsCount}</td>
+                        <td>{item.score.breakdown.activePollsCount}</td>
                         <td className="progress-cell">
-                          <div className="mini-bar-track">
-                            <div className="mini-bar-fill" style={{ width: `${item.score.progressPct}%`, background: item.score.levelInfo.color }} />
+                          <div className="mini-level-progress">
+                            <div className="level-bar-track">
+                              <div className="level-bar-fill" style={{ width: `${item.score.progressPct}%`, background: item.score.levelInfo.color }} />
+                            </div>
+                            <span className="mini-bar-pct">{item.score.progressPct}%</span>
                           </div>
-                          <span className="mini-bar-pct">{item.score.progressPct}%</span>
                         </td>
                         <td>
                           <Link to={`/clubs/${item.club._id || item.club.id}`}>

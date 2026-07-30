@@ -3,11 +3,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Button from '../components/ui/Button';
 import { CategoryBadge, ClubStatusBadge } from '../components/ui/Badge';
-import { getClubByIdAPI } from '../services/club.service';
+import { getClubByIdAPI, getClubMembersAPI } from '../services/club.service';
 import { getClubEventsAPI, registerToEventAPI, unregisterFromEventAPI } from '../services/event.service';
 import { getClubPollsAPI, voteAPI } from '../services/poll.service';
 import { joinClubAPI, getMyMembershipsAPI } from '../services/member.service';
 import { useAuth } from '../context/AuthContext';
+import './Dashboard/Dashboard.css';
 import './ClubDetail.css';
 
 type Tab = 'evenements' | 'membres' | 'sondages' | 'galerie';
@@ -18,6 +19,7 @@ export default function ClubDetailPage() {
   const navigate   = useNavigate();
 
   const [club,         setClub]         = useState<any>(null);
+  const [members,      setMembers]      = useState<any[]>([]);
   const [events,       setEvents]       = useState<any[]>([]);
   const [polls,        setPolls]        = useState<any[]>([]);
   const [membership,   setMembership]   = useState<any>(null);
@@ -26,17 +28,20 @@ export default function ClubDetailPage() {
   const [activeTab,    setActiveTab]    = useState<Tab>('evenements');
   const [loading,      setLoading]      = useState(true);
   const [joining,      setJoining]      = useState(false);
+  const [galleryPreview, setGalleryPreview] = useState<any | null>(null);
 
   useEffect(() => {
     if (!id) return;
     const fetchAll = async () => {
       try {
-        const [clubData, eventsData, pollsData] = await Promise.all([
+        const [clubData, membersData, eventsData, pollsData] = await Promise.all([
           getClubByIdAPI(id),
+          getClubMembersAPI(id).catch(() => []),
           getClubEventsAPI(id).catch(() => []),
           getClubPollsAPI(id).catch(() => []),
         ]);
         setClub(clubData);
+        setMembers(membersData);
         setEvents(eventsData);
         setPolls(pollsData);
 
@@ -139,7 +144,7 @@ export default function ClubDetailPage() {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'evenements', label: `Événements (${events.length})` },
-    { key: 'membres',    label: `Membres`                        },
+    { key: 'membres',    label: `Membres (${members.length})`    },
     { key: 'sondages',   label: `Sondages (${polls.length})`     },
     { key: 'galerie',    label: 'Galerie'                        },
   ];
@@ -260,11 +265,11 @@ export default function ClubDetailPage() {
 
           {activeTab === 'membres' && (
             <div className="tab-section">
-              {!club.members || club.members.length === 0 ? (
+              {members.length === 0 ? (
                 <EmptyState text="Liste des membres non disponible." />
               ) : (
                 <div className="members-grid">
-                  {club.members.map((m: any) => (
+                  {members.map((m: any) => (
                     <div key={m._id} className="member-card card">
                       <div className="member-avatar">
                         {m.userId?.firstName?.[0]}{m.userId?.lastName?.[0]}
@@ -361,7 +366,48 @@ export default function ClubDetailPage() {
 
           {activeTab === 'galerie' && (
             <div className="tab-section">
-              <EmptyState text="La galerie sera disponible prochainement." />
+              {club.gallery && club.gallery.length > 0 ? (
+                <div className="gallery-grid">
+                  {club.gallery.map((photo: any) => (
+                    <div key={photo._id || photo.id} className="gallery-item">
+                      <div className="gallery-img-wrap" onClick={() => setGalleryPreview(photo)}>
+                        <img
+                          src={photo.url}
+                          alt={photo.caption || club.name}
+                          className="gallery-img"
+                          loading="lazy"
+                        />
+                        <div className="gallery-overlay">
+                          <span className="gallery-zoom">🔍 Voir</span>
+                        </div>
+                      </div>
+                      {photo.caption && (
+                        <div style={{ padding: '8px 10px', color: 'var(--text-secondary)', minHeight: 34 }}>
+                          {photo.caption}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState text="Aucune photo dans la galerie du club." />
+              )}
+
+              {galleryPreview && (
+                <div className="gallery-modal-overlay" onClick={() => setGalleryPreview(null)}>
+                  <div className="gallery-modal" onClick={(e) => e.stopPropagation()}>
+                    <button className="gallery-modal-close" onClick={() => setGalleryPreview(null)}>✕</button>
+                    <img
+                      src={galleryPreview.url}
+                      alt={galleryPreview.caption || club.name}
+                      className="gallery-modal-img"
+                    />
+                    {galleryPreview.caption && (
+                      <p className="gallery-modal-caption">{galleryPreview.caption}</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -1,131 +1,144 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
 import PageHeader from '../../components/ui/Pageheader';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
-import { Select } from '../../components/ui/Input';
-import { mockEvents, mockClubs } from '../../data/mockData';
-import { Event, EventStatus } from '../../types/index';
+import api from '../../services/api';
 import '../Dashboard/Dashboard.css';
 
-type StatusFilter = 'all' | EventStatus;
-
-const statusTabs: { key: StatusFilter; label: string }[] = [
-  { key: 'all', label: 'Tous' },
-  { key: 'upcoming', label: 'À venir' },
-  { key: 'past', label: 'Passés' },
-  { key: 'cancelled', label: 'Annulés' },
-];
-
 export default function AdminEvents() {
-  const [events, setEvents] = useState<Event[]>([...mockEvents]);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [clubFilter, setClubFilter] = useState<string>('all');
+  const [events,    setEvents]    = useState<any[]>([]);
+  const [loading,   setLoading]   = useState(true);
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'past' | 'all'>('all');
 
-  const getClubName = (clubId: string) => {
-    const club = mockClubs.find((c) => c.id === clubId);
-    return club ? club.name : '—';
-  };
-
-  const clubOptions = [
-    { value: 'all', label: 'Tous les clubs' },
-    ...mockClubs.map((c) => ({ value: c.id, label: c.name })),
-  ];
-
-  const filteredEvents = events.filter((e) => {
-    const matchStatus = statusFilter === 'all' || e.status === statusFilter;
-    const matchClub = clubFilter === 'all' || e.clubId === clubFilter;
-    return matchStatus && matchClub;
-  });
-
-  const handleAnnuler = (eventId: string) => {
-    if (!window.confirm("Annuler cet événement ? Les inscrits en seront informés.")) return;
-    setEvents((prev) =>
-      prev.map((e) => (e.id === eventId ? { ...e, status: 'cancelled' } : e))
-    );
-  };
-
-  const statusBadge = (status: EventStatus) => {
-    const map: Record<EventStatus, { label: string; variant: 'primary' | 'gray' | 'danger' }> = {
-      upcoming: { label: 'À venir', variant: 'primary' },
-      past: { label: 'Passé', variant: 'gray' },
-      cancelled: { label: 'Annulé', variant: 'danger' },
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await api.get('/events/admin/all').catch(() =>
+          api.get('/events')
+        );
+        setEvents(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
-    const item = map[status];
-    return <Badge label={item.label} variant={item.variant} />;
+    fetchEvents();
+  }, []);
+
+  const handleCancel = async (eventId: string, title: string) => {
+    if (!window.confirm(`Annuler l'événement "${title}" ?`)) return;
+    try {
+      await api.patch(`/events/${eventId}`, { status: 'cancelled' });
+      setEvents((prev) =>
+        prev.map((e) => (e._id === eventId ? { ...e, status: 'cancelled' } : e))
+      );
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Erreur');
+    }
+  };
+
+  const filtered =
+    activeTab === 'all'
+      ? events
+      : events.filter((e) => e.status === activeTab);
+
+  const counts = {
+    all:      events.length,
+    upcoming: events.filter((e) => e.status === 'upcoming').length,
+    past:     events.filter((e) => e.status === 'past').length,
+  };
+
+  const getStatusVariant = (status: string) => {
+    if (status === 'upcoming')  return 'primary';
+    if (status === 'past')      return 'gray';
+    if (status === 'cancelled') return 'danger';
+    return 'gray';
+  };
+
+  const getStatusLabel = (status: string) => {
+    if (status === 'upcoming')  return 'À venir';
+    if (status === 'past')      return 'Passé';
+    if (status === 'cancelled') return 'Annulé';
+    return status;
   };
 
   return (
     <div className="dashboard-layout">
       <Sidebar />
-
       <div className="dashboard-content">
+
         <PageHeader
           title="Événements"
-          subtitle="Superviser l'ensemble des événements organisés par les clubs"
+          subtitle="Vue globale de tous les événements de la plateforme"
         />
 
-        <div className="dash-form-grid" style={{ marginBottom: 16, alignItems: 'end' }}>
-          <Select
-            label="Filtrer par club"
-            value={clubFilter}
-            onChange={setClubFilter}
-            options={clubOptions}
-          />
-        </div>
-
         <div className="members-tabs">
-          {statusTabs.map((tab) => (
+          {[
+            { key: 'all',      label: 'Tous',      count: counts.all      },
+            { key: 'upcoming', label: 'À venir',   count: counts.upcoming },
+            { key: 'past',     label: 'Passés',    count: counts.past     },
+          ].map((tab) => (
             <button
               key={tab.key}
-              className={`members-tab ${statusFilter === tab.key ? 'members-tab-active' : ''}`}
-              onClick={() => setStatusFilter(tab.key)}
+              className={`members-tab ${activeTab === tab.key ? 'members-tab-active' : ''}`}
+              onClick={() => setActiveTab(tab.key as any)}
             >
-              {tab.label}
+              {tab.label} ({tab.count})
             </button>
           ))}
         </div>
 
         <div className="card dash-section">
-          {filteredEvents.length === 0 ? (
-            <p className="dash-empty">Aucun événement ne correspond à ces filtres.</p>
+          {loading ? (
+            <p className="dash-empty">Chargement...</p>
+          ) : filtered.length === 0 ? (
+            <p className="dash-empty">Aucun événement dans cette catégorie.</p>
           ) : (
             <table className="dash-table">
               <thead>
                 <tr>
-                  <th>Événement</th>
+                  <th>Titre</th>
                   <th>Club</th>
                   <th>Date</th>
                   <th>Lieu</th>
                   <th>Inscrits</th>
+                  <th>Visibilité</th>
                   <th>Statut</th>
-                  <th>Actions</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredEvents.map((event) => (
-                  <tr key={event.id}>
+                {filtered.map((event: any) => (
+                  <tr key={event._id}>
                     <td className="dash-table-name">{event.title}</td>
-                    <td>{getClubName(event.clubId)}</td>
-                    <td>
-                      {new Date(event.date).toLocaleDateString('fr-FR')} · {event.time}
-                    </td>
+                    <td>{event.clubId?.name || '—'}</td>
+                    <td>{new Date(event.date).toLocaleDateString('fr-FR')} {event.time}</td>
                     <td>{event.location}</td>
                     <td>
-                      {event.registeredCount}
+                      {event.registeredCount ?? 0}
                       {event.maxCapacity ? ` / ${event.maxCapacity}` : ''}
                     </td>
-                    <td>{statusBadge(event.status)}</td>
                     <td>
-                      <div className="dash-actions">
-                        {event.status === 'upcoming' ? (
-                          <Button size="sm" variant="danger" onClick={() => handleAnnuler(event.id)}>
-                            Annuler
-                          </Button>
-                        ) : (
-                          <span className="text-hint">—</span>
-                        )}
-                      </div>
+                      {event.visibility === 'public' ? '🌐 Public' : '🔒 Membres'}
+                    </td>
+                    <td>
+                      <Badge
+                        label={getStatusLabel(event.status)}
+                        variant={getStatusVariant(event.status) as any}
+                      />
+                    </td>
+                    <td>
+                      {event.status === 'upcoming' && (
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => handleCancel(event._id, event.title)}
+                        >
+                          Annuler
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -133,6 +146,7 @@ export default function AdminEvents() {
             </table>
           )}
         </div>
+
       </div>
     </div>
   );

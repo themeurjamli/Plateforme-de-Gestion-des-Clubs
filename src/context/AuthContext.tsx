@@ -17,24 +17,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user,    setUser]    = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const checkToken = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const me = await getMeAPI();
-        setUser({ ...me, id: (me as any)._id });
-      } catch {
-        localStorage.removeItem('token');
-      } finally {
-        setLoading(false);
-      }
-    };
-    checkToken();
-  }, []);
+ useEffect(() => {
+  const checkToken = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const me = await getMeAPI();
+      setUser({
+        id:        (me as any)._id,
+        firstName: me.firstName,
+        lastName:  me.lastName,
+        email:     me.email,
+        role:      me.role,
+        status:    me.status,
+        clubId:    (me as any).clubId,
+        bio:       me.bio,
+        interests: me.interests,
+        createdAt: (me as any).createdAt,
+      });
+    } catch {
+      localStorage.removeItem('token');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+  checkToken();
+}, []);
 
   const login = async (email: string, password: string) => {
     const data = await loginAPI(email, password);

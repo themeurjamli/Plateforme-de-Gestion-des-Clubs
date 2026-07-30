@@ -260,6 +260,25 @@
   flex-shrink: 0;
 }
 
+.mini-level-progress {
+  display: grid;
+  gap: 6px;
+  min-width: 120px;
+}
+
+.mini-level-progress .level-bar-track {
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.mini-level-progress .level-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width 0.4s ease;
+}
+
 .classement-empty {
   text-align: center;
   padding: 48px;

@@ -20,6 +20,15 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.use((req, res, next) => {
+  if (typeof req.url === 'string') {
+    if (req.url.includes('%0A') || req.url.includes('%0D') || /[\r\n]/.test(req.url)) {
+      req.url = req.url.replace(/%0A/g, '').replace(/%0D/g, '').replace(/[\r\n]/g, '');
+    }
+  }
+  next();
+});
+
 app.use('/api/auth',        authRoutes);
 app.use('/api/clubs',       clubRoutes);
 app.use('/api/memberships', memberRoutes);

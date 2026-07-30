@@ -5,10 +5,13 @@ import PageHeader from '../../components/ui/Pageheader';
 import StatCard from '../../components/ui/Statcard';
 import Button from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
-import { getClubByIdAPI } from '../../services/club.service';
+import { getClubByIdAPI, getClubScoreAPI } from '../../services/club.service';
 import { getClubMembersAPI, getClubPendingAPI } from '../../services/club.service';
 import { getClubEventsAPI } from '../../services/event.service';
 import { getClubPollsAPI } from '../../services/poll.service';
+import { getClubChallenges } from '../../utils/challenges';
+import ChallengesPanel from '../../components/ui/ChallengesPanel';
+import { LevelProgress } from '../../components/ui/LevelBadge';
 import './Dashboard.css';
 
 export default function DashboardHome() {
@@ -19,6 +22,7 @@ export default function DashboardHome() {
   const [pending,  setPending]  = useState<any[]>([]);
   const [events,   setEvents]   = useState<any[]>([]);
   const [polls,    setPolls]    = useState<any[]>([]);
+  const [score,    setScore]    = useState<any>(null);
   const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
@@ -27,19 +31,21 @@ export default function DashboardHome() {
     const fetchAll = async () => {
       try {
         const clubId = user.clubId as string;
-        const [clubData, membersData, pendingData, eventsData, pollsData] =
+        const [clubData, membersData, pendingData, eventsData, pollsData, clubScoreData] =
           await Promise.all([
             getClubByIdAPI(clubId),
             getClubMembersAPI(clubId),
             getClubPendingAPI(clubId),
             getClubEventsAPI(clubId),
             getClubPollsAPI(clubId),
+            getClubScoreAPI(clubId),
           ]);
         setClub(clubData);
         setMembers(membersData);
         setPending(pendingData);
         setEvents(eventsData);
         setPolls(pollsData);
+        setScore(clubScoreData.score);
       } catch (err) {
         console.error(err);
       } finally {
@@ -78,6 +84,9 @@ export default function DashboardHome() {
 
   const upcoming    = events.filter((e: any) => e.status === 'upcoming');
   const activePolls = polls.filter((p: any)  => p.status === 'active');
+  const activeChallenges = club && events && members && polls
+    ? getClubChallenges(club, events, members, polls)
+    : [];
 
   return (
     <div className="dashboard-layout">
@@ -185,6 +194,44 @@ export default function DashboardHome() {
           </div>
 
         </div>
+
+        {user.role === 'president' && score && (
+          <div className="dash-two-cols">
+            <div className="dash-section card">
+              <div className="dash-section-header">
+                <h2 className="dash-section-title">Niveau du club</h2>
+              </div>
+              <div className="dash-level-card">
+                <div className="dash-level-summary">
+                  <div className="dash-level-title">{score.levelInfo.icon} {score.levelInfo.level}</div>
+                  <div className="dash-level-points">{score.totalPoints} pts</div>
+                  <div className="dash-level-next">
+                    {score.levelInfo.nextLevel
+                      ? `Prochain niveau : ${score.levelInfo.nextLevel} (${score.levelInfo.maxPoints ?? ''})`
+                      : 'Niveau maximum atteint'}
+                  </div>
+                </div>
+                <LevelProgress
+                  levelInfo={score.levelInfo}
+                  points={score.totalPoints}
+                  progressPct={score.progressPct}
+                />
+                <div className="dash-level-breakdown">
+                  <span>🧑‍🤝‍🧑 {score.breakdown?.membersCount ?? 0} membres</span>
+                  <span>📅 {score.breakdown?.eventsCount ?? 0} événements</span>
+                  <span>✅ {score.breakdown?.fullEventsCount ?? 0} complets</span>
+                  <span>📊 {score.breakdown?.activePollsCount ?? 0} sondages</span>
+                  {score.weeklyStreakLabel && <span>{score.weeklyStreakLabel}</span>}
+                  <span>🎯 Bonus défis +{score.breakdown?.challengeBonus ?? 0} pts</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="dash-section card">
+              <ChallengesPanel challenges={activeChallenges} />
+            </div>
+          </div>
+        )}
 
         <div className="card dash-club-info">
           <div className="dash-section-header">
