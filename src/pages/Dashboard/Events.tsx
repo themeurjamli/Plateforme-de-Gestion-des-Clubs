@@ -4,6 +4,7 @@ import PageHeader from '../../components/ui/Pageheader';
 import Button from '../../components/ui/Button';
 import Input, { Textarea, Select } from '../../components/ui/Input';
 import { useAuth } from '../../context/AuthContext';
+import {useToast} from '../../context/ToastContex';
 import {
   getClubEventsAPI,
   createEventAPI,
@@ -34,6 +35,7 @@ export default function EventsPage() {
   const [form,      setForm]      = useState(emptyForm);
   const [errors,    setErrors]    = useState<Record<string, string>>({});
   const [saving,    setSaving]    = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!clubId) return;
@@ -102,16 +104,18 @@ export default function EventsPage() {
         setEvents((prev) =>
           prev.map((e) => (e._id === editId ? updated : e))
         );
+        showToast('Événement mis à jour avec succès.', 'success');
       } else {
         const created = await createEventAPI(payload);
         setEvents((prev) => [created, ...prev]);
+        showToast('Événement créé avec succès.', 'success');
       }
 
       setShowForm(false);
       setEditId(null);
       setForm(emptyForm);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur lors de la sauvegarde.');
+      showToast(err.response?.data?.message || 'Erreur lors de la sauvegarde.', 'error');
     } finally {
       setSaving(false);
     }
@@ -122,8 +126,9 @@ export default function EventsPage() {
     try {
       await deleteEventAPI(event._id);
       setEvents((prev) => prev.filter((e) => e._id !== event._id));
+      showToast('Événement supprimé.', 'success');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur lors de la suppression.');
+      showToast(err.response?.data?.message || 'Erreur lors de la suppression.', 'error');
     }
   };
 

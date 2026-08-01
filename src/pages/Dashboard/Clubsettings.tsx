@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button';
 import Input, { Textarea, Select } from '../../components/ui/Input';
 import { ClubStatusBadge, CategoryBadge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
+import {useToast} from '../../context/ToastContex';
 import { getClubByIdAPI, updateClubAPI } from '../../services/club.service';
 import { ClubCategory } from '../../types/index';
 import './Dashboard.css';
@@ -33,6 +34,7 @@ export default function ClubSettingsPage() {
   const [loading,      setLoading]      = useState(true);
   const [showDelete,   setShowDelete]   = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!clubId) return;
@@ -69,7 +71,7 @@ export default function ClubSettingsPage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur lors de la sauvegarde.');
+      showToast(err.response?.data?.message || 'Erreur lors de la sauvegarde.', 'error');
     } finally {
       setSaving(false);
     }
@@ -207,7 +209,7 @@ export default function ClubSettingsPage() {
                 />
                 <Button
                   variant="danger"
-                  onClick={() => alert('Suppression (simulation) — à implémenter avec deleteClubAPI')}
+                  onClick={() => alert('Suppression du club ?')}
                   disabled={deleteConfirm !== club?.name}
                 >
                   Confirmer

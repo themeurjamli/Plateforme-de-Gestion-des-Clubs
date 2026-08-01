@@ -7,6 +7,7 @@ import { getClubsAPI } from '../services/club.service';
 import { getMyMembershipsAPI, joinClubAPI } from '../services/member.service';
 import { Club, ClubCategory, Membership } from '../types/index';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContex';
 import './Clubs.css';
 
 const CATEGORIES: ClubCategory[] = [
@@ -15,7 +16,7 @@ const CATEGORIES: ClubCategory[] = [
 
 export default function ClubsPage() {
   const { user } = useAuth();
-
+  const { showToast } = useToast();
   const [clubs,       setClubs]       = useState<Club[]>([]);
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [search,      setSearch]      = useState('');
@@ -67,7 +68,7 @@ export default function ClubsPage() {
       const newM = await joinClubAPI(clubId);
       setMemberships((prev) => [...prev, newM]);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur lors de la demande.');
+      showToast(err.response?.data?.message || 'Erreur lors de la demande.', 'error');
     } finally {
       setJoiningId(null);
     }

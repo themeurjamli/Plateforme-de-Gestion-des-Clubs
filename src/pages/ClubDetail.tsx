@@ -8,6 +8,7 @@ import { getClubEventsAPI, registerToEventAPI, unregisterFromEventAPI } from '..
 import { getClubPollsAPI, voteAPI } from '../services/poll.service';
 import { joinClubAPI, getMyMembershipsAPI } from '../services/member.service';
 import { useAuth } from '../context/AuthContext';
+import {useToast} from '../context/ToastContex';
 import './Dashboard/Dashboard.css';
 import './ClubDetail.css';
 
@@ -17,7 +18,7 @@ export default function ClubDetailPage() {
   const { id }     = useParams<{ id: string }>();
   const { user }   = useAuth();
   const navigate   = useNavigate();
-
+  const { showToast } = useToast();
   const [club,         setClub]         = useState<any>(null);
   const [members,      setMembers]      = useState<any[]>([]);
   const [events,       setEvents]       = useState<any[]>([]);
@@ -69,7 +70,7 @@ export default function ClubDetailPage() {
       const newM = await joinClubAPI(id!);
       setMembership(newM);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur lors de la demande.');
+      showToast(err.response?.data?.message || 'Erreur lors de la demande.', 'error');
     } finally {
       setJoining(false);
     }
@@ -105,7 +106,7 @@ export default function ClubDetailPage() {
       setPolls((prev) => prev.map((p) => (p._id === pollId ? updated : p)));
       setMyVotes((prev) => ({ ...prev, [pollId]: optionId }));
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur lors du vote.');
+      showToast(err.response?.data?.message || 'Erreur lors du vote.', 'error');
     }
   };
  

@@ -4,6 +4,7 @@ import PageHeader from '../../components/ui/Pageheader';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useAuth } from '../../context/AuthContext';
+import {useToast} from '../../context/ToastContex';
 import {
   getClubPollsAPI,
   createPollAPI,
@@ -24,6 +25,7 @@ export default function PollsPage() {
   const [question,  setQuestion]  = useState('');
   const [options,   setOptions]   = useState(['', '']);
   const [errors,    setErrors]    = useState<Record<string, string>>({});
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!clubId) return;
@@ -58,11 +60,12 @@ export default function PollsPage() {
         options:  options.filter((o) => o.trim()),
       });
       setPolls([newPoll, ...polls]);
+      showToast('Sondage créé.', 'success');
       setShowForm(false);
       setQuestion('');
       setOptions(['', '']);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur lors de la création.');
+      showToast(err.response?.data?.message || 'Erreur lors de la création.', 'error');
     }
   };
 
@@ -70,9 +73,10 @@ export default function PollsPage() {
     try {
       const updated = await voteAPI(pollId, optionId);
       setPolls((prev) => prev.map((p) => (p._id === pollId ? updated : p)));
+      showToast('Vote enregistré.', 'success');
       setMyVotes((prev) => ({ ...prev, [pollId]: optionId }));
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur lors du vote.');
+      showToast(err.response?.data?.message || 'Erreur lors du vote.', 'error');
     }
   };
 
@@ -81,8 +85,9 @@ export default function PollsPage() {
     try {
       const updated = await closePollAPI(pollId);
       setPolls((prev) => prev.map((p) => (p._id === pollId ? updated : p)));
+      showToast('Sondage clôturé.', 'success');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur');
+      showToast(err.response?.data?.message || 'Erreur', 'error');
     }
   };
 
@@ -91,8 +96,9 @@ export default function PollsPage() {
     try {
       await deletePollAPI(pollId);
       setPolls((prev) => prev.filter((p) => p._id !== pollId));
+      showToast('Sondage supprimé.', 'success');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur');
+      showToast(err.response?.data?.message || 'Erreur', 'error');
     }
   };
 

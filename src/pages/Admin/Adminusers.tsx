@@ -6,7 +6,10 @@ import Badge from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Input';
 import api from '../../services/api';
 import { UserRole } from '../../types/index';
+import { useToast } from '../../context/ToastContex';
 import '../Dashboard/Dashboard.css';
+
+
 
 const roleOptions = [
   { value: 'member',    label: 'Membre'    },
@@ -17,7 +20,7 @@ const roleOptions = [
 export default function AdminUsers() {
   const [users,   setUsers]   = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const { showToast } = useToast();
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -37,7 +40,7 @@ export default function AdminUsers() {
       const res = await api.patch(`/users/${userId}`, { role });
       setUsers((prev) => prev.map((u) => (u._id === userId ? res.data : u)));
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur');
+      showToast(err.response?.data?.message || 'Erreur', 'error');
     }
   };
 
@@ -47,7 +50,7 @@ export default function AdminUsers() {
       const res = await api.patch(`/users/${userId}`, { status: 'banned' });
       setUsers((prev) => prev.map((u) => (u._id === userId ? res.data : u)));
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur');
+      showToast(err.response?.data?.message || 'Erreur', 'error');
     }
   };
 
@@ -56,7 +59,7 @@ export default function AdminUsers() {
       const res = await api.patch(`/users/${userId}`, { status: 'active' });
       setUsers((prev) => prev.map((u) => (u._id === userId ? res.data : u)));
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur');
+      showToast(err.response?.data?.message || 'Erreur', 'error');
     }
   };
 

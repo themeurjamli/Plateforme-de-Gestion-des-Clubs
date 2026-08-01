@@ -6,6 +6,7 @@ import Input, { Textarea } from '../components/ui/Input';
 import { UserRoleBadge } from '../components/ui/Badge';
 import MemberBadges from '../components/ui/MemberBadges';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContex';
 import { getMemberBadges } from '../utils/memberBadges';
 import { getMyMembershipsAPI } from '../services/member.service';
 import './Profile.css';
@@ -18,6 +19,7 @@ export default function ProfilePage() {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
 
+  const { showToast } = useToast();
   const [firstName,  setFirstName]  = useState(user?.firstName ?? '');
   const [lastName,   setLastName]   = useState(user?.lastName  ?? '');
   const [bio,        setBio]        = useState(user?.bio       ?? '');
@@ -58,7 +60,7 @@ export default function ProfilePage() {
       setSavedProfile(true);
       setTimeout(() => setSavedProfile(false), 3000);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur lors de la sauvegarde.');
+      showToast(err.response?.data?.message || 'Erreur lors de la sauvegarde.', 'error');
     } finally {
       setSaving(false);
     }

@@ -4,6 +4,7 @@ import Navbar from '../components/layout/Navbar';
 import Button from '../components/ui/Button';
 import Input, { Textarea, Select } from '../components/ui/Input';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContex';
 import { createClubAPI } from '../services/club.service';
 import { ClubCategory } from '../types/index';
 import './CreateClub.css';
@@ -21,7 +22,7 @@ const CATEGORIES: { value: ClubCategory; label: string }[] = [
 export default function CreateClubPage() {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
-
+  const { showToast } = useToast();
   const [name,        setName]        = useState('');
   const [description, setDescription] = useState('');
   const [category,    setCategory]    = useState<ClubCategory>('Tech');
@@ -54,6 +55,7 @@ export default function CreateClubPage() {
       setSubmitted(true);
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Erreur lors de la création.';
+      showToast(msg, 'error');
       setErrors({ name: msg });
     } finally {
       setSaving(false);

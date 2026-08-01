@@ -7,6 +7,7 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import { getAllClubsAPI, updateClubStatusAPI } from '../../services/club.service';
 import api from '../../services/api';
+import {useToast} from '../../context/ToastContex';
 import '../Dashboard/Dashboard.css';
 
 export default function AdminHome() {
@@ -34,7 +35,7 @@ export default function AdminHome() {
     };
     fetchAll();
   }, []);
-
+  const { showToast } = useToast();
   const clubsActifs  = clubs.filter((c) => c.status === 'active');
   const clubsPending = clubs.filter((c) => c.status === 'pending');
 
@@ -43,7 +44,7 @@ export default function AdminHome() {
       const updated = await updateClubStatusAPI(clubId, 'active');
       setClubs((prev) => prev.map((c) => (c._id === clubId ? updated : c)));
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur');
+      showToast(err.response?.data?.message || 'Erreur', 'error');
     }
   };
 
@@ -53,7 +54,7 @@ export default function AdminHome() {
       const updated = await updateClubStatusAPI(clubId, 'rejected');
       setClubs((prev) => prev.map((c) => (c._id === clubId ? updated : c)));
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur');
+      showToast(err.response?.data?.message || 'Erreur', 'error');
     }
   };
 

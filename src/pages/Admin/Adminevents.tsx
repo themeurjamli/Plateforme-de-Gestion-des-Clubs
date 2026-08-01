@@ -4,6 +4,7 @@ import PageHeader from '../../components/ui/Pageheader';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContex';
 import '../Dashboard/Dashboard.css';
 
 export default function AdminEvents() {
@@ -35,7 +36,7 @@ export default function AdminEvents() {
         prev.map((e) => (e._id === eventId ? { ...e, status: 'cancelled' } : e))
       );
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur');
+      showToast(err.response?.data?.message || 'Erreur', 'error');
     }
   };
 
@@ -63,6 +64,7 @@ export default function AdminEvents() {
     if (status === 'cancelled') return 'Annulé';
     return status;
   };
+  const { showToast } = useToast();
 
   return (
     <div className="dashboard-layout">

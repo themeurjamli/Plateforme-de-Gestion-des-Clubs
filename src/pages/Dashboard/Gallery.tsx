@@ -3,6 +3,7 @@ import Sidebar from '../../components/layout/Sidebar';
 import PageHeader from '../../components/ui/Pageheader';
 import Button from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
+import {useToast} from '../../context/ToastContex';
 import { getClubByIdAPI, addClubPhotoAPI, deleteClubPhotoAPI } from '../../services/club.service';
 import './Dashboard.css';
 
@@ -23,6 +24,7 @@ export default function GalleryPage() {
   const [caption, setCaption] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const loadGallery = async () => {
@@ -100,7 +102,7 @@ export default function GalleryPage() {
       setCaption('');
     } catch (error) {
       console.error(error);
-      alert('Erreur lors de l’ajout de la photo.');
+      showToast('Erreur lors de l’ajout de la photo.', 'error');
     } finally {
       setUploading(false);
     }
@@ -112,12 +114,13 @@ export default function GalleryPage() {
     try {
       await deleteClubPhotoAPI(user.clubId, photoId);
       setPhotos((prev) => prev.filter((photo) => photo.id !== photoId && photo._id !== photoId));
+      showToast('Photo supprimée.', 'success');
       if (preview?.id === photoId || preview?._id === photoId) {
         setPreview(null);
       }
     } catch (error: any) {
       console.error(error);
-      alert(`Impossible de supprimer la photo : ${error?.response?.data?.message ?? error.message ?? 'erreur inconnue'}`);
+      showToast(`Impossible de supprimer la photo : ${error?.response?.data?.message ?? error.message ?? 'erreur inconnue'}`, 'error');
     }
   };
 

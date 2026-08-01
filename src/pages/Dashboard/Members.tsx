@@ -4,6 +4,7 @@ import PageHeader from '../../components/ui/Pageheader';
 import Button from '../../components/ui/Button';
 import { MembershipStatusBadge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
+import {useToast} from '../../context/ToastContex';
 import {
   getClubMembersAPI,
   getClubPendingAPI,
@@ -21,6 +22,7 @@ export default function MembersPage() {
   const [pending,    setPending]    = useState<any[]>([]);
   const [activeTab,  setActiveTab]  = useState<'pending' | 'members'>('pending');
   const [loading,    setLoading]    = useState(true);
+  const { showToast } = useToast();
 
   const clubId = user?.clubId as string;
 
@@ -49,8 +51,9 @@ export default function MembersPage() {
       const accepted = pending.find((m) => m._id === membershipId);
       setPending((prev) => prev.filter((m) => m._id !== membershipId));
       if (accepted) setMembers((prev) => [...prev, { ...accepted, status: 'member' }]);
+      showToast('Membre accepté avec succès.', 'success');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur');
+      showToast(err.response?.data?.message || 'Erreur lors de l\'acceptation du membre.', 'error');
     }
   };
 
@@ -60,8 +63,9 @@ export default function MembersPage() {
       await removeMemberAPI(membershipId);
       setMembers((prev) => prev.filter((m) => m._id !== membershipId));
       setPending((prev) => prev.filter((m) => m._id !== membershipId));
+      showToast('Membre retiré avec succès.', 'success');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur');
+      showToast(err.response?.data?.message || 'Erreur lors du retrait du membre.', 'error');
     }
   };
 

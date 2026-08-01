@@ -6,6 +6,7 @@ import { ClubStatusBadge, CategoryBadge } from '../../components/ui/Badge';
 import { getAllClubsAPI, updateClubStatusAPI } from '../../services/club.service';
 import { ClubStatus } from '../../types/index';
 import '../Dashboard/Dashboard.css';
+import { useToast } from '../../context/ToastContex';
 
 type TabFilter = 'all' | ClubStatus;
 
@@ -13,6 +14,7 @@ export default function AdminClubs() {
   const [clubs,     setClubs]     = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [loading,   setLoading]   = useState(true);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchClubs = async () => {
@@ -32,8 +34,9 @@ export default function AdminClubs() {
     try {
       const updated = await updateClubStatusAPI(clubId, status);
       setClubs((prev) => prev.map((c) => (c._id === clubId ? updated : c)));
+      showToast('Statut du club mis à jour avec succès', 'success');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur');
+      showToast(err.response?.data?.message || 'Erreur', 'error');
     }
   };
 

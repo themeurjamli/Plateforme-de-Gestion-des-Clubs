@@ -4,13 +4,14 @@ import Navbar from '../components/layout/Navbar';
 import Button from '../components/ui/Button';
 import { CategoryBadge, MembershipStatusBadge } from '../components/ui/Badge';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContex';
 import { getMyMembershipsAPI } from '../services/member.service';
 import { getPublicEventsAPI, registerToEventAPI, unregisterFromEventAPI } from '../services/event.service';
 import './Myclubs.css';
 
 export default function MyClubsPage() {
   const { user } = useAuth();
-
+  const { showToast } = useToast();
   const [memberships,   setMemberships]   = useState<any[]>([]);
   const [events,        setEvents]        = useState<any[]>([]);
   const [registrations, setRegistrations] = useState<string[]>([]);
@@ -61,7 +62,7 @@ export default function MyClubsPage() {
         setRegistrations((prev) => [...prev, eventId]);
       }
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur');
+      showToast(err.response?.data?.message || 'Erreur', 'error');
     }
   };
 
