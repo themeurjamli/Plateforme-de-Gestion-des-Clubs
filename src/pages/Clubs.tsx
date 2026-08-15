@@ -6,6 +6,7 @@ import { CategoryBadge, ClubStatusBadge } from '../components/ui/Badge';
 import { getClubsAPI } from '../services/club.service';
 import { getMyMembershipsAPI, joinClubAPI } from '../services/member.service';
 import { Club, ClubCategory, Membership } from '../types/index';
+import  TUNISIAN_CITIES  from '../utils/cities';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContex';
 import './Clubs.css';
@@ -21,6 +22,7 @@ export default function ClubsPage() {
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [search,      setSearch]      = useState('');
   const [category,    setCategory]    = useState<ClubCategory | 'Tous'>('Tous');
+  const [city,        setCity]        = useState<string | 'Toutes'>('Toutes');
   const [sort,        setSort]        = useState<'members' | 'events' | 'name'>('members');
   const [loading,     setLoading]     = useState(true);
   const [joiningId,   setJoiningId]   = useState<string | null>(null);
@@ -45,6 +47,7 @@ export default function ClubsPage() {
 
   const filtered = clubs
     .filter((c) => category === 'Tous' ? true : c.category === category)
+    .filter((c) => city === 'Toutes' ? true : (c.cities ?? []).includes(city))
     .filter((c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.description.toLowerCase().includes(search.toLowerCase())
@@ -96,6 +99,19 @@ export default function ClubsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <select
+            className="clubs-sort"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+          >
+            <option value="Toutes">📍 Toutes les villes</option>
+            {user?.city && (
+              <option value={user.city}>📍 Ma ville ({user.city})</option>
+            )}
+            {TUNISIAN_CITIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
           <select
             className="clubs-sort"
             value={sort}

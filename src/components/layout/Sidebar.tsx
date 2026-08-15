@@ -10,7 +10,9 @@ const presidentItems = [
   { path: '/dashboard/evenements', icon: '📅', label: 'Événements'  },
   { path: '/dashboard/sondages', icon: '📊', label: 'Sondages'      },
   { path: '/dashboard/galerie',  icon: '🖼',  label: 'Galerie'       },
-  { path: '/dashboard/settings', icon: '⚙',  label: 'Mon club'      },
+  { path: '/dashboard/blog', icon: '📝', label: 'Blog' },
+  { path: '/dashboard/settings', icon: '⚙',  label: 'Mon club'      }
+  
 ];
 
 const adminItems = [

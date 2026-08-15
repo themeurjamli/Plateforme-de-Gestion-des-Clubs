@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clubId:    (me as any).clubId,
         bio:       me.bio,
         interests: me.interests,
+        city: (me as any).city,
         createdAt: (me as any).createdAt,
       });
     } catch {

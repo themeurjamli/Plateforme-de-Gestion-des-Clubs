@@ -9,6 +9,7 @@ import Home         from './pages/Home';
 import ClubsPage    from './pages/Clubs';
 import ClubDetail   from './pages/ClubDetail';
 import Classement   from './pages/Classement';
+import PostDetail from './pages/PostDetail';
 
 import ProfilePage  from './pages/Profile';
 import MyClubsPage  from './pages/Myclubs';
@@ -20,6 +21,7 @@ import EventsPage    from './pages/Dashboard/Events';
 import PollsPage     from './pages/Dashboard/Polls';
 import GalleryPage   from './pages/Dashboard/Gallery';
 import ClubSettings  from './pages/Dashboard/Clubsettings';
+import BlogPage from './pages/Dashboard/Blog';
 
 import AdminHome    from './pages/Admin/Adminhome';
 import AdminClubs   from './pages/Admin/Adminclubs';
@@ -95,6 +97,7 @@ function AppRoutes() {
       <Route path="/"           element={<Home />} />
       <Route path="/clubs"      element={<ClubsPage />} />
       <Route path="/clubs/:id"  element={<ClubDetail />} />
+      <Route path="/posts/:id" element={<PostDetail />} />
       <Route path="/classement" element={<Classement />} />
 
       <Route path="/profile"    element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
@@ -106,6 +109,7 @@ function AppRoutes() {
       <Route path="/dashboard/evenements"   element={<PrivateRoute><EventsPage /></PrivateRoute>} />
       <Route path="/dashboard/sondages"     element={<PrivateRoute><PollsPage /></PrivateRoute>} />
       <Route path="/dashboard/galerie"      element={<PrivateRoute><GalleryPage /></PrivateRoute>} />
+      <Route path="/dashboard/blog"         element={<PrivateRoute><BlogPage /></PrivateRoute>} />
       <Route path="/dashboard/settings"     element={<PrivateRoute><ClubSettings /></PrivateRoute>} />
 
       <Route path="/admin"                  element={<RoleRoute roles={['admin']}><AdminHome /></RoleRoute>} />

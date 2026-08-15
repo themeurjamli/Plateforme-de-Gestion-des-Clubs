@@ -75,10 +75,10 @@ router.get('/me', protect, async (req, res) => {
 
 router.put('/me', protect, async (req, res) => {
   try {
-    const { firstName, lastName, bio, interests } = req.body;
+    const { firstName, lastName, bio, interests,city } = req.body;
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { firstName, lastName, bio, interests },
+      { firstName, lastName, bio, interests, city },
       { new: true, runValidators: true }
     );
     res.json(user);

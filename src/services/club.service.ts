@@ -4,6 +4,7 @@ import { Club, ClubStatus } from '../types/index';
 export const getClubsAPI = async (params?: {
   category?: string;
   search?:   string;
+  city?:     string;
 }): Promise<Club[]> => {
   const res = await api.get('/clubs', { params });
   return res.data;
@@ -45,6 +46,7 @@ export const createClubAPI = async (data: {
   name:        string;
   description: string;
   category:    string;
+  cities?:     string[];
 }): Promise<Club> => {
   const res = await api.post('/clubs', data);
   return res.data;

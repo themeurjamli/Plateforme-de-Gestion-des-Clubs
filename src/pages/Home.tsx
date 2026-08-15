@@ -37,6 +37,10 @@ export default function Home() {
     .sort((a, b) => (b.membersCount ?? 0) - (a.membersCount ?? 0))
     .slice(0, 3);
 
+  const nearbyClubs = user?.city
+    ? clubs.filter((c) => (c.cities ?? []).includes(user.city as string)).slice(0, 3)
+    : [];
+
   const totalMembers = clubs.reduce((s, c) => s + (c.membersCount ?? 0), 0);
   const totalEvents  = clubs.reduce((s, c) => s + (c.eventsCount  ?? 0), 0);
 
@@ -92,6 +96,20 @@ export default function Home() {
               ))}
             </div>
           )}
+        </section>
+      )}
+
+      {!search && !loading && nearbyClubs.length > 0 && (
+        <section className="home-container">
+          <h2 className="section-title">📍 Clubs près de chez toi</h2>
+          <p className="section-subtitle">
+            Actifs à {user?.city}
+          </p>
+          <div className="clubs-grid">
+            {nearbyClubs.map((club) => (
+              <ClubCard key={club.id || (club as any)._id} club={club} />
+            ))}
+          </div>
         </section>
       )}
 

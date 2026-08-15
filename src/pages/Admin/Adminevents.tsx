@@ -15,9 +15,7 @@ export default function AdminEvents() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await api.get('/events/admin/all').catch(() =>
-          api.get('/events')
-        );
+        const res = await api.get('/events');
         setEvents(res.data);
       } catch (err) {
         console.error(err);

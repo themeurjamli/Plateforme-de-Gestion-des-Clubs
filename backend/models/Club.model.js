@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const TUNISIAN_CITIES = require('../../src/utils/cities');
 
 const ClubSchema = new mongoose.Schema(
   {
@@ -30,6 +31,11 @@ const ClubSchema = new mongoose.Schema(
     logoUrl: {
       type:    String,
       default: '',
+    },
+    cities: {
+      type:    [String],
+      enum:    TUNISIAN_CITIES,
+      default: [],
     },
     gallery: [
       {

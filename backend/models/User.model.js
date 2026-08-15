@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt   = require('bcryptjs');
+const TUNISIAN_CITIES = require('../../src/utils/cities');
 
 const UserSchema = new mongoose.Schema(
   {
@@ -25,10 +26,10 @@ const UserSchema = new mongoose.Schema(
       ],
     },
     password: {
-      type:     String,
-      required: [true, 'Le mot de passe est requis'],
+      type:      String,
+      required:  [true, 'Le mot de passe est requis'],
       minlength: [8, 'Minimum 8 caractères'],
-      select:   false, 
+      select:    false,
     },
     role: {
       type:    String,
@@ -40,23 +41,25 @@ const UserSchema = new mongoose.Schema(
       enum:    ['active', 'banned'],
       default: 'active',
     },
-    bio:       { type: String, default: '' },
+    bio:       { type: String,   default: '' },
     interests: { type: [String], default: [] },
-    avatarUrl: { type: String, default: '' },
+    avatarUrl: { type: String,   default: '' },
     clubId:    { type: mongoose.Schema.Types.ObjectId, ref: 'Club', default: null },
-  },
-  {
-    timestamps: true, 
-  }
-);
 
+    city: {
+      type:    String,
+      enum:    [...TUNISIAN_CITIES, null],
+      default: null,
+    },
+  },
+  { timestamps: true }
+);
 
 UserSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
-  const salt = await bcrypt.genSalt(10);
+  const salt    = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
-
 
 UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);

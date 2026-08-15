@@ -4,7 +4,6 @@ const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
-// ── GET /api/users — Tous les utilisateurs (admin) ───────────
 router.get('/', protect, authorize('admin'), async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
@@ -14,7 +13,6 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// ── GET /api/users/:id — Un utilisateur ──────────────────────
 router.get('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -25,7 +23,6 @@ router.get('/:id', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// ── PATCH /api/users/:id — Modifier rôle ou statut (admin) ───
 router.patch('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const { role, status } = req.body;

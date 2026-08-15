@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Button from '../components/ui/Button';
 import Input, { Textarea, Select } from '../components/ui/Input';
+import CitySelect from '../components/ui/CitySelect';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContex';
 import { createClubAPI } from '../services/club.service';
@@ -26,6 +27,7 @@ export default function CreateClubPage() {
   const [name,        setName]        = useState('');
   const [description, setDescription] = useState('');
   const [category,    setCategory]    = useState<ClubCategory>('Tech');
+  const [cities,      setCities]      = useState<string[]>([]);
   const [errors,      setErrors]      = useState<Record<string, string>>({});
   const [submitted,   setSubmitted]   = useState(false);
   const [createdClub, setCreatedClub] = useState<any>(null);
@@ -49,7 +51,7 @@ export default function CreateClubPage() {
     if (!validate()) return;
     setSaving(true);
     try {
-      const newClub = await createClubAPI({ name: name.trim(), description: description.trim(), category });
+      const newClub = await createClubAPI({ name: name.trim(), description: description.trim(), category, cities });
       await updateUser({ role: 'president', clubId: newClub.id || newClub.id });
       setCreatedClub(newClub);
       setSubmitted(true);
@@ -133,6 +135,13 @@ export default function CreateClubPage() {
             <div className="create-fields">
               <Input label="Nom du club" placeholder="Ex : Club de Robotique" value={name} onChange={setName} error={errors.name} required hint="Minimum 3 caractères, doit être unique" />
               <Select label="Catégorie" value={category} onChange={(v) => setCategory(v as ClubCategory)} options={CATEGORIES} />
+              <CitySelect
+                multiple
+                label="Villes d'activité"
+                values={cities}
+                onChange={setCities}
+                placeholder="Sélectionner les villes"
+              />
               <Textarea label="Description" placeholder="Décris les objectifs, les activités... (minimum 20 caractères)" value={description} onChange={setDescription} rows={5} hint={`${description.length} caractères`} />
               {errors.description && <p style={{ fontSize: 11, color: 'var(--danger)', marginTop: -8 }}>{errors.description}</p>}
             </div>

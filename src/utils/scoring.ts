@@ -6,6 +6,7 @@ const POINTS = {
   PAR_EVENEMENT:       10,
   EVENEMENT_COMPLET:   15,  
   PAR_SONDAGE_ACTIF:    8,
+  LOCALISATION:        5,
 };
 
 
@@ -36,6 +37,7 @@ export interface ClubScore {
     evenements:        number;
     evenementsComplets: number;
     sondagesActifs:    number;
+    localisation:      number;
   };
   levelInfo:     LevelInfo;
   progressPct:   number; 
@@ -45,7 +47,8 @@ export function calculateClubScore(
   club:        Club,
   events:      Event[],
   polls:       Poll[],
-  memberships: Membership[]
+  memberships: Membership[],
+  userCity:    string | null = null
 ): ClubScore {
   const clubEvents   = events.filter((e) => e.clubId === club.id);
   const clubPolls    = polls.filter((p) => p.clubId === club.id);
@@ -58,7 +61,10 @@ export function calculateClubScore(
   ).length * POINTS.EVENEMENT_COMPLET;
   const ptsPolls     = clubPolls.filter((p) => p.status === 'active').length * POINTS.PAR_SONDAGE_ACTIF;
 
-  const total = ptsMembers + ptsEvents + ptsComplete + ptsPolls;
+  const isLocationMatch = !!userCity && Array.isArray(club.cities) && club.cities.includes(userCity);
+  const ptsLocalisation = isLocationMatch ? POINTS.LOCALISATION : 0;
+
+  const total = ptsMembers + ptsEvents + ptsComplete + ptsPolls + ptsLocalisation;
 
   const levelInfo = getLevelInfo(total);
 
@@ -77,6 +83,7 @@ export function calculateClubScore(
       evenements:         ptsEvents,
       evenementsComplets: ptsComplete,
       sondagesActifs:     ptsPolls,
+      localisation:       ptsLocalisation,
     },
     levelInfo,
     progressPct,
@@ -94,13 +101,14 @@ export function rankClubs(
   clubs:       Club[],
   events:      Event[],
   polls:       Poll[],
-  memberships: Membership[]
+  memberships: Membership[],
+  userCity:    string | null = null
 ): { club: Club; score: ClubScore; rank: number }[] {
   return clubs
     .filter((c) => c.status === 'active')
     .map((club) => ({
       club,
-      score: calculateClubScore(club, events, polls, memberships),
+      score: calculateClubScore(club, events, polls, memberships, userCity),
     }))
     .sort((a, b) => b.score.totalPoints - a.score.totalPoints)
     .map((item, index) => ({ ...item, rank: index + 1 }));

@@ -13,6 +13,7 @@ const SCORE_RULES = {
   EVENT_FULL: 15,
   POLL_ACTIVE: 8,
   WEEKLY_STREAK: 5,
+  LOCATION_MATCH: 5,
 };
 
 const LEVELS = [
@@ -126,7 +127,7 @@ function getClubChallenges(club, events, memberships, polls) {
   return Array.from({ length: 3 }, (_, idx) => allChallenges[(start + idx) % allChallenges.length]);
 }
 
-function scoreClub(club, events, polls, memberships) {
+function scoreClub(club, events, polls, memberships, userCity) {
   const clubId = club._id.toString();
   const clubMembers = memberships.filter((m) => m.clubId.toString() === clubId);
   const clubEvents = events.filter((e) => e.clubId.toString() === clubId);
@@ -146,10 +147,13 @@ function scoreClub(club, events, polls, memberships) {
   const eventFullPoints = fullEventsCount * SCORE_RULES.EVENT_FULL;
   const pollsPoints = activePollsCount * SCORE_RULES.POLL_ACTIVE;
 
+  const isLocationMatch = !!userCity && Array.isArray(club.cities) && club.cities.includes(userCity);
+  const locationPoints = isLocationMatch ? SCORE_RULES.LOCATION_MATCH : 0;
+
   const challenges = getClubChallenges(club, events, memberships, polls);
   const challengeBonus = challenges.filter((c) => c.completed).reduce((sum, c) => sum + c.bonusPoints, 0);
 
-  const totalPoints = membersPoints + eventsPoints + eventFullPoints + pollsPoints + weeklyStreakPoints + challengeBonus;
+  const totalPoints = membersPoints + eventsPoints + eventFullPoints + pollsPoints + weeklyStreakPoints + challengeBonus + locationPoints;
 
   const levelInfo = getLevelInfo(totalPoints);
   let progressPct = 100;
@@ -174,6 +178,8 @@ function scoreClub(club, events, polls, memberships) {
       weeklyStreak,
       weeklyStreakPoints,
       challengeBonus,
+      locationPoints,
+      isLocationMatch,
     },
     challenges,
     levelInfo,
@@ -184,11 +190,12 @@ function scoreClub(club, events, polls, memberships) {
 
 router.get('/', async (req, res) => {
   try {
-    const { category, search } = req.query;
+    const { category, search , city} = req.query;
     const filter = { status: 'active' };
 
     if (category) filter.category = category;
     if (search)   filter.name = { $regex: search, $options: 'i' };
+    if(city) filter.cities = city;
 
     const clubs = await Club.find(filter)
       .populate('presidentId', 'firstName lastName')
@@ -204,6 +211,7 @@ router.get('/', async (req, res) => {
 
 router.get('/ranking', async (req, res) => {
   try {
+    const{userCity} = req.query;
     const [clubs, events, polls, memberships] = await Promise.all([
       Club.find({ status: 'active' }),
       Event.find().populate('registeredCount'),
@@ -212,7 +220,7 @@ router.get('/ranking', async (req, res) => {
     ]);
 
     const ranked = clubs
-      .map((club) => ({ club, score: scoreClub(club, events, polls, memberships) }))
+      .map((club) => ({ club, score: scoreClub(club, events, polls, memberships, userCity) }))
       .sort((a, b) => b.score.totalPoints - a.score.totalPoints)
       .map((item, index) => ({ ...item, rank: index + 1 }));
 
@@ -233,7 +241,8 @@ router.get('/:id/score', async (req, res) => {
       Membership.find({ clubId: club._id, status: 'member' }),
     ]);
 
-    const score = scoreClub(club, events, polls, memberships);
+    const { userCity } = req.query;
+    const score = scoreClub(club, events, polls, memberships, userCity);
     res.json({ club, score });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -271,7 +280,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', protect, async (req, res) => {
   try {
-    const { name, description, category } = req.body;
+    const { name, description, category, cities } = req.body;
 
     const existing = await Club.findOne({ presidentId: req.user._id });
     if (existing) {
@@ -282,6 +291,7 @@ router.post('/', protect, async (req, res) => {
       name,
       description,
       category,
+      cities,
       presidentId: req.user._id,
       status:      'pending', 
     });
@@ -308,10 +318,10 @@ router.put('/:id', protect, authorize('president', 'admin'), async (req, res) =>
       return res.status(403).json({ message: 'Non autorisé' });
     }
 
-    const { name, description, category } = req.body;
+    const { name, description, category,cities} = req.body;
     const updated = await Club.findByIdAndUpdate(
       req.params.id,
-      { name, description, category },
+      { name, description, category,cities},
       { new: true, runValidators: true }
     );
 

@@ -1,24 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContex';
 import './Auth.css';
 import logo from '../assets/LOGO1.png';
 
 export default function LoginPage() {
-  const { login } = useAuth();
-  const navigate  = useNavigate();
+  const { login }     = useAuth();
+  const { showToast } = useToast();
+  const navigate      = useNavigate();
 
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
-  const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
+  const handleSubmit = async () => {
     if (!email || !password) {
-      setError('Veuillez remplir tous les champs.');
+      showToast('Veuillez remplir tous les champs.', 'warning');
       return;
     }
 
@@ -27,8 +25,9 @@ export default function LoginPage() {
       await login(email, password);
       navigate('/');
     } catch (err: any) {
-      setError(
-        err.response?.data?.message || 'Email ou mot de passe incorrect.'
+      showToast(
+        err.response?.data?.message || 'Email ou mot de passe incorrect.',
+        'error'
       );
     } finally {
       setLoading(false);
@@ -44,13 +43,7 @@ export default function LoginPage() {
         <h1 className="auth-title">Bon retour !</h1>
         <p className="auth-subtitle">Connecte-toi à ton compte</p>
 
-        {error && (
-          <div className="auth-error">
-            <span>⚠</span> {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="auth-form">
+        <div className="auth-form">
           <div className="form-group">
             <label className="form-label">Email</label>
             <input
@@ -70,17 +63,19 @@ export default function LoginPage() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             />
           </div>
 
           <button
-            type="submit"
+            type="button"
             className="btn-primary btn-full"
+            onClick={handleSubmit}
             disabled={loading}
           >
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
-        </form>
+        </div>
 
         <p className="auth-footer">
           Pas encore de compte ?{' '}

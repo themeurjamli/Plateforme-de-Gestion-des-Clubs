@@ -3,6 +3,7 @@ import Sidebar from '../../components/layout/Sidebar';
 import PageHeader from '../../components/ui/Pageheader';
 import Button from '../../components/ui/Button';
 import Input, { Textarea, Select } from '../../components/ui/Input';
+import CitySelect from '../../components/ui/CitySelect';
 import { ClubStatusBadge, CategoryBadge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
 import {useToast} from '../../context/ToastContex';
@@ -28,6 +29,7 @@ export default function ClubSettingsPage() {
   const [name,         setName]         = useState('');
   const [description,  setDescription]  = useState('');
   const [category,     setCategory]     = useState<ClubCategory>('Tech');
+  const [cities,       setCities]       = useState<string[]>([]);
   const [errors,       setErrors]       = useState<Record<string, string>>({});
   const [saved,        setSaved]        = useState(false);
   const [saving,       setSaving]       = useState(false);
@@ -45,6 +47,7 @@ export default function ClubSettingsPage() {
         setName(data.name);
         setDescription(data.description);
         setCategory(data.category);
+        setCities(data.cities ?? []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -66,7 +69,7 @@ export default function ClubSettingsPage() {
     if (!validate()) return;
     setSaving(true);
     try {
-      const updated = await updateClubAPI(clubId, { name, description, category });
+      const updated = await updateClubAPI(clubId, { name, description, category, cities });
       setClub(updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -140,12 +143,20 @@ export default function ClubSettingsPage() {
               onChange={(v) => setCategory(v as ClubCategory)}
               options={CATEGORIES}
             />
+            <CitySelect
+              multiple
+              label="Villes d'activité"
+              values={cities}
+              onChange={setCities}
+              placeholder="Sélectionner les villes"
+            />
           </div>
           <div className="dash-form-actions">
             <Button variant="secondary" onClick={() => {
               setName(club.name);
               setDescription(club.description);
               setCategory(club.category);
+              setCities(club.cities ?? []);
               setErrors({});
             }}>
               Annuler

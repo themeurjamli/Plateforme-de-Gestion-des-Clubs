@@ -9,6 +9,7 @@ const memberRoutes  = require('./routes/members.routes');
 const eventRoutes   = require('./routes/events.routes');
 const pollRoutes    = require('./routes/polls.routes');
 const userRoutes    = require('./routes/users.routes');
+const postRoutes    = require('./routes/posts.routes');
 
 connectDB();
 
@@ -18,7 +19,8 @@ app.use(cors({
   origin:      'http://localhost:3000',
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 app.use((req, res, next) => {
   if (typeof req.url === 'string') {
@@ -35,6 +37,7 @@ app.use('/api/memberships', memberRoutes);
 app.use('/api/events',      eventRoutes);
 app.use('/api/polls',       pollRoutes);
 app.use('/api/users',       userRoutes);
+app.use('/api/posts',       postRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Serveur opérationnel 🚀' });

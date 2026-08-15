@@ -7,44 +7,48 @@ import { getClubByIdAPI, getClubMembersAPI } from '../services/club.service';
 import { getClubEventsAPI, registerToEventAPI, unregisterFromEventAPI } from '../services/event.service';
 import { getClubPollsAPI, voteAPI } from '../services/poll.service';
 import { joinClubAPI, getMyMembershipsAPI } from '../services/member.service';
+import { getClubPostsAPI, Post } from '../services/post.service';
 import { useAuth } from '../context/AuthContext';
-import {useToast} from '../context/ToastContex';
+import { useToast } from '../context/ToastContex';
 import './Dashboard/Dashboard.css';
 import './ClubDetail.css';
 
-type Tab = 'evenements' | 'membres' | 'sondages' | 'galerie';
+type Tab = 'evenements' | 'membres' | 'sondages' | 'galerie' | 'blog';
 
 export default function ClubDetailPage() {
-  const { id }     = useParams<{ id: string }>();
-  const { user }   = useAuth();
-  const navigate   = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { showToast } = useToast();
-  const [club,         setClub]         = useState<any>(null);
-  const [members,      setMembers]      = useState<any[]>([]);
-  const [events,       setEvents]       = useState<any[]>([]);
-  const [polls,        setPolls]        = useState<any[]>([]);
-  const [membership,   setMembership]   = useState<any>(null);
-  const [myVotes,      setMyVotes]      = useState<Record<string, string>>({});
-  const [registrations,setRegistrations]= useState<string[]>([]); 
-  const [activeTab,    setActiveTab]    = useState<Tab>('evenements');
-  const [loading,      setLoading]      = useState(true);
-  const [joining,      setJoining]      = useState(false);
+  const [club, setClub] = useState<any>(null);
+  const [members, setMembers] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [polls, setPolls] = useState<any[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [membership, setMembership] = useState<any>(null);
+  const [myVotes, setMyVotes] = useState<Record<string, string>>({});
+  const [registrations, setRegistrations] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<Tab>('evenements');
+  const [loading, setLoading] = useState(true);
+  const [joining, setJoining] = useState(false);
   const [galleryPreview, setGalleryPreview] = useState<any | null>(null);
 
   useEffect(() => {
     if (!id) return;
     const fetchAll = async () => {
       try {
-        const [clubData, membersData, eventsData, pollsData] = await Promise.all([
+        const [clubData, membersData, eventsData, pollsData, postsData] = await Promise.all([
           getClubByIdAPI(id),
           getClubMembersAPI(id).catch(() => []),
           getClubEventsAPI(id).catch(() => []),
           getClubPollsAPI(id).catch(() => []),
+          getClubPostsAPI(id).catch(() => []),
         ]);
         setClub(clubData);
         setMembers(membersData);
         setEvents(eventsData);
         setPolls(pollsData);
+        setPosts(postsData);
 
         if (user) {
           const myMemberships = await getMyMembershipsAPI();
@@ -109,7 +113,7 @@ export default function ClubDetailPage() {
       showToast(err.response?.data?.message || 'Erreur lors du vote.', 'error');
     }
   };
- 
+
 
   if (loading) {
     return (
@@ -136,18 +140,20 @@ export default function ClubDetailPage() {
     );
   }
 
-  const clubId        = club._id || club.id;
-  const isMember      = membership?.status === 'member';
-  const isPending     = membership?.status === 'pending';
+  const clubId = club._id || club.id;
+  const isMember = membership?.status === 'member';
+  const isPending = membership?.status === 'pending';
   const upcomingEvents = events.filter((e) => e.status === 'upcoming');
-  const activePolls    = polls.filter((p) => p.status === 'active');
-  const closedPolls    = polls.filter((p) => p.status === 'closed');
+  const activePolls = polls.filter((p) => p.status === 'active');
+  const closedPolls = polls.filter((p) => p.status === 'closed');
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'evenements', label: `Événements (${events.length})` },
-    { key: 'membres',    label: `Membres (${members.length})`    },
-    { key: 'sondages',   label: `Sondages (${polls.length})`     },
-    { key: 'galerie',    label: 'Galerie'                        },
+    { key: 'blog', label: `Blog (${posts.length})` },
+    { key: 'membres', label: `Membres (${members.length})` },
+    { key: 'sondages', label: `Sondages (${polls.length})` },
+    { key: 'galerie', label: 'Galerie' },
+
   ];
 
   return (
@@ -179,6 +185,9 @@ export default function ClubDetailPage() {
                   <span>
                     👤 Président : {club.presidentId.firstName} {club.presidentId.lastName}
                   </span>
+                )}
+                {club.cities && club.cities.length > 0 && (
+                  <span>📍 {club.cities.join(', ')}</span>
                 )}
               </div>
             </div>
@@ -303,7 +312,7 @@ export default function ClubDetailPage() {
                       (s: number, o: any) => s + o.votesCount, 0
                     ) ?? 0;
                     const voted = !!myVotes[poll._id];
-                    const selected= myVotes[poll._id] || null;
+                    const selected = myVotes[poll._id] || null;
 
                     return (
                       <div key={poll._id} className="poll-card card">
@@ -325,7 +334,7 @@ export default function ClubDetailPage() {
                                     name={`poll-${poll._id}`}
                                     value={opt._id}
                                     checked={selected === opt._id}
-                                    onChange={() => {setMyVotes((prev) => ({ ...prev, [poll._id]: opt._id }));}}
+                                    onChange={() => { setMyVotes((prev) => ({ ...prev, [poll._id]: opt._id })); }}
                                     style={{ accentColor: 'var(--primary)', marginRight: 8 }}
                                   />
                                 )}
@@ -364,7 +373,45 @@ export default function ClubDetailPage() {
               )}
             </div>
           )}
-
+          {activeTab === 'blog' && (
+            <div className="tab-section">
+              {posts.length === 0 ? (
+                <EmptyState text="Aucun article publié par ce club." />
+              ) : (
+                <div className="blog-public-list">
+                  {posts.map((post) => (
+                    <Link
+                      key={post._id}
+                      to={`/posts/${post._id}`}
+                      className="blog-public-card card"
+                    >
+                      {post.coverImage && (
+                        <div className="blog-public-cover">
+                          <img src={post.coverImage} alt={post.title} />
+                        </div>
+                      )}
+                      <div className="blog-public-body">
+                        <h3 className="blog-public-title">{post.title}</h3>
+                        <p className="blog-public-excerpt">
+                          {post.content.slice(0, 120)}
+                          {post.content.length > 120 ? '...' : ''}
+                        </p>
+                        <div className="blog-public-meta">
+                          <span>
+                            ✍ {post.authorId?.firstName} {post.authorId?.lastName}
+                          </span>
+                          <span>
+                            📅 {new Date(post.createdAt).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="blog-public-arrow">→</div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {activeTab === 'galerie' && (
             <div className="tab-section">
               {club.gallery && club.gallery.length > 0 ? (
@@ -411,6 +458,7 @@ export default function ClubDetailPage() {
               )}
             </div>
           )}
+
 
         </div>
       </div>

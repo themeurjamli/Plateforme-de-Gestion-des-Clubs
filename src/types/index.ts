@@ -14,6 +14,7 @@ export interface User {
   interests?: string[];
   avatarUrl?: string;
   clubId?: string; 
+  city?: string;
   createdAt: string;
 }
 
@@ -46,6 +47,7 @@ export interface Club {
   presidentId: string;
   logoUrl?: string;
   gallery?: ClubPhoto[];
+  cities?: string[];
   membersCount: number;
   eventsCount: number;
   createdAt: string;

@@ -8,6 +8,7 @@ import MemberBadges from '../components/ui/MemberBadges';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContex';
 import { getMemberBadges } from '../utils/memberBadges';
+import CitySelect from '../components/ui/CitySelect';
 import { getMyMembershipsAPI } from '../services/member.service';
 import './Profile.css';
 
@@ -20,21 +21,22 @@ export default function ProfilePage() {
   const navigate = useNavigate();
 
   const { showToast } = useToast();
-  const [firstName,  setFirstName]  = useState(user?.firstName ?? '');
-  const [lastName,   setLastName]   = useState(user?.lastName  ?? '');
-  const [bio,        setBio]        = useState(user?.bio       ?? '');
-  const [interests,  setInterests]  = useState<string[]>(user?.interests ?? []);
+  const [firstName, setFirstName] = useState(user?.firstName ?? '');
+  const [lastName, setLastName] = useState(user?.lastName ?? '');
+  const [bio, setBio] = useState(user?.bio ?? '');
+  const [interests, setInterests] = useState<string[]>(user?.interests ?? []);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [confirmPwd,  setConfirmPwd]  = useState('');
+  const [confirmPwd, setConfirmPwd] = useState('');
   const [savedProfile, setSavedProfile] = useState(false);
-  const [savedPwd,     setSavedPwd]     = useState(false);
-  const [saving,       setSaving]       = useState(false);
-  const [errors,       setErrors]       = useState<Record<string, string>>({});
+  const [savedPwd, setSavedPwd] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [city, setCity] = useState<string | null>(user?.city ?? null);
 
   const badges = getMemberBadges(
     user as any,
-    [], 
+    [],
     [],
     []
   );
@@ -50,13 +52,13 @@ export default function ProfilePage() {
   const handleSaveProfile = async () => {
     const e: Record<string, string> = {};
     if (!firstName.trim()) e.firstName = 'Le prénom est requis';
-    if (!lastName.trim())  e.lastName  = 'Le nom est requis';
+    if (!lastName.trim()) e.lastName = 'Le nom est requis';
     setErrors(e);
     if (Object.keys(e).length > 0) return;
 
     setSaving(true);
     try {
-      await updateUser({ firstName, lastName, bio, interests });
+      await updateUser({ firstName, lastName, bio, interests, city: city ?? undefined });
       setSavedProfile(true);
       setTimeout(() => setSavedProfile(false), 3000);
     } catch (err: any) {
@@ -68,8 +70,8 @@ export default function ProfilePage() {
 
   const handleSavePassword = async () => {
     const e: Record<string, string> = {};
-    if (!oldPassword)            e.oldPassword = 'Requis';
-    if (newPassword.length < 8)  e.newPassword = 'Minimum 8 caractères';
+    if (!oldPassword) e.oldPassword = 'Requis';
+    if (newPassword.length < 8) e.newPassword = 'Minimum 8 caractères';
     if (newPassword !== confirmPwd) e.confirmPwd = 'Les mots de passe ne correspondent pas';
     setErrors(e);
     if (Object.keys(e).length > 0) return;
@@ -147,10 +149,18 @@ export default function ProfilePage() {
               <h2 className="profile-section-title">Informations personnelles</h2>
               <div className="profile-form-row">
                 <Input label="Prénom" value={firstName} onChange={setFirstName} error={errors.firstName} required />
-                <Input label="Nom"    value={lastName}  onChange={setLastName}  error={errors.lastName}  required />
+                <Input label="Nom" value={lastName} onChange={setLastName} error={errors.lastName} required />
               </div>
               <div style={{ marginBottom: 14 }}>
-                <Input label="Email" value={user.email} onChange={() => {}} disabled hint="L'email ne peut pas être modifié" />
+                <Input label="Email" value={user.email} onChange={() => { }} disabled hint="L'email ne peut pas être modifié" />
+              </div>
+              <div style={{ marginBottom: 14 }}>
+                <CitySelect
+                  label="Ma ville"
+                  value={city}
+                  onChange={setCity}
+                  placeholder="Sélectionner ma ville"
+                />
               </div>
               <Textarea label="Bio" placeholder="Parle de toi..." value={bio} onChange={setBio} rows={3} />
               <div className="profile-form-actions">
@@ -159,6 +169,7 @@ export default function ProfilePage() {
                   setLastName(user.lastName);
                   setBio(user.bio ?? '');
                   setInterests(user.interests ?? []);
+                  setCity(user.city ?? null);
                 }}>
                   Annuler
                 </Button>
