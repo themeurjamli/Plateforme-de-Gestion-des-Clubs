@@ -9,7 +9,6 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContex';
 import { getMemberBadges } from '../utils/memberBadges';
 import CitySelect from '../components/ui/CitySelect';
-import { getMyMembershipsAPI } from '../services/member.service';
 import './Profile.css';
 
 const ALL_INTERESTS = [

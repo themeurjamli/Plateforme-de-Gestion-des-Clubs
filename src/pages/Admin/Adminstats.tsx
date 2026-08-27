@@ -5,7 +5,7 @@ import StatCard from '../../components/ui/Statcard';
 import api from '../../services/api';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import '../Dashboard/Dashboard.css';
 

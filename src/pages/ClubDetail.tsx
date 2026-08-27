@@ -140,10 +140,8 @@ export default function ClubDetailPage() {
     );
   }
 
-  const clubId = club._id || club.id;
   const isMember = membership?.status === 'member';
   const isPending = membership?.status === 'pending';
-  const upcomingEvents = events.filter((e) => e.status === 'upcoming');
   const activePolls = polls.filter((p) => p.status === 'active');
   const closedPolls = polls.filter((p) => p.status === 'closed');
 

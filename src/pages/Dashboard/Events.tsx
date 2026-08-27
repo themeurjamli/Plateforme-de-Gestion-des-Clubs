@@ -11,7 +11,6 @@ import {
   updateEventAPI,
   deleteEventAPI,
 } from '../../services/event.service';
-import { Event } from '../../types/index';
 import './Dashboard.css';
 
 const emptyForm = {

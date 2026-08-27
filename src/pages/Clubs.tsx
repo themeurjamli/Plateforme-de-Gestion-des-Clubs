@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Button from '../components/ui/Button';
-import { CategoryBadge, ClubStatusBadge } from '../components/ui/Badge';
+import { CategoryBadge } from '../components/ui/Badge';
 import { getClubsAPI } from '../services/club.service';
 import { getMyMembershipsAPI, joinClubAPI } from '../services/member.service';
 import { Club, ClubCategory, Membership } from '../types/index';

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
 import PageHeader from '../../components/ui/Pageheader';
 import Button from '../../components/ui/Button';
-import { MembershipStatusBadge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
 import {useToast} from '../../context/ToastContex';
 import {

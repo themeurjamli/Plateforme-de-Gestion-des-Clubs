@@ -5,7 +5,6 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Input';
 import api from '../../services/api';
-import { UserRole } from '../../types/index';
 import { useToast } from '../../context/ToastContex';
 import '../Dashboard/Dashboard.css';
 
